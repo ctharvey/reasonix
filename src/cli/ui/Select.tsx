@@ -2,6 +2,7 @@
 
 import { Box, Text } from "ink";
 import React, { useState } from "react";
+import stringWidth from "string-width";
 import { useKeystroke } from "./keystroke-context.js";
 import { COLOR } from "./theme.js";
 
@@ -162,7 +163,7 @@ function SelectRow<V extends string>({
         </Text>
       </Box>
       {item.hint ? (
-        <Box paddingLeft={marker.length + 1}>
+        <Box paddingLeft={stringWidth(marker) + 1}>
           <Text dimColor>{item.hint}</Text>
         </Box>
       ) : null}
