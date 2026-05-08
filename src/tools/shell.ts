@@ -104,20 +104,20 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
           description:
             'Full command line. POSIX-ish quoting. Chain operators `|`, `||`, `&&`, `;` and file redirects `>` / `>>` / `<` / `2>` / `2>>` / `2>&1` / `&>` work natively (no shell). Background `&`, heredoc `<<`, env-var expansion `$VAR`, and command substitution `$(…)` are rejected (or passed through as literal in the case of `$VAR`). To pass an operator character as a literal argument (e.g. a regex), wrap it in quotes: `grep "a|b" file.txt`.',
         },
-      timeoutSec: {
-        type: "integer",
-        description: `Override the default ${timeoutSec}s timeout for a single command.`,
+        timeoutSec: {
+          type: "integer",
+          description: `Override the default ${timeoutSec}s timeout for a single command.`,
+        },
+        outputMode: {
+          type: "string",
+          enum: ["filtered", "raw"],
+          description:
+            'Output filtering mode. "filtered" (default) applies category-aware compression to reduce token usage while preserving semantics. "raw" bypasses all filtering and returns the verbatim command output.',
+        },
       },
-      outputMode: {
-        type: "string",
-        enum: ["filtered", "raw"],
-        description:
-          'Output filtering mode. "filtered" (default) applies category-aware compression to reduce token usage while preserving semantics. "raw" bypasses all filtering and returns the verbatim command output.',
-      },
+      required: ["command"],
     },
-    required: ["command"],
-  },
-  fn: async (args: { command: string; timeoutSec?: number; outputMode?: string }, ctx) => {
+    fn: async (args: { command: string; timeoutSec?: number; outputMode?: string }, ctx) => {
       const cmd = args.command.trim();
       if (!cmd) throw new Error("run_command: empty command");
       const effectiveTimeout = Math.max(1, Math.min(600, args.timeoutSec ?? timeoutSec));
@@ -204,17 +204,17 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
         }
         // "run_once" — fall through and execute
       }
-    const result = await jobs.start(cmd, {
-      cwd: rootDir,
-      waitSec: args.waitSec,
-      signal: ctx?.signal,
-    });
-    return filterShellOutput(formatJobStart(result), {
-      tool: "run_background",
-      command: cmd,
-      exitCode: result.exitCode,
-      timedOut: false,
-    });
+      const result = await jobs.start(cmd, {
+        cwd: rootDir,
+        waitSec: args.waitSec,
+        signal: ctx?.signal,
+      });
+      return filterShellOutput(formatJobStart(result), {
+        tool: "run_background",
+        command: cmd,
+        exitCode: result.exitCode,
+        timedOut: false,
+      });
     },
   });
 
@@ -358,7 +358,8 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
         },
         maxChars: {
           type: "integer",
-          description: "Cap the returned raw output to this many characters. 0 = unlimited. Default: 0.",
+          description:
+            "Cap the returned raw output to this many characters. 0 = unlimited. Default: 0.",
         },
       },
       required: ["id"],
@@ -439,9 +440,7 @@ export function formatCommandResult(
     ? `$ ${cmd}\n[killed after timeout]`
     : `$ ${cmd}\n[exit ${r.exitCode ?? "?"}]`;
   const executedLine =
-    executedCommand && executedCommand !== cmd
-      ? `[executed as: ${executedCommand}]`
-      : "";
+    executedCommand && executedCommand !== cmd ? `[executed as: ${executedCommand}]` : "";
   const headerBlock = executedLine ? `${header}\n${executedLine}` : header;
   return r.output ? `${headerBlock}\n${r.output}` : headerBlock;
 }

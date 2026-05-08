@@ -151,7 +151,13 @@ function compressDiffBody(diffLines: string[], opts: GitDiffFilterOptions): stri
         const head = sectionBody.slice(0, headCount);
         const omitted = sectionBody.length - headCount;
         totalOmitted += omitted;
-        out.push(...headerLines, ...head, "", `[ΓÇª ${omitted} lines omitted in this file ΓÇª]`, "");
+        out.push(
+          ...headerLines,
+          ...head,
+          "",
+          `[ΓÇª ${omitted} lines omitted in this file ΓÇª]`,
+          "",
+        );
       }
     }
   }
