@@ -2187,14 +2187,16 @@ describe("isVerboseCommand", () => {
 });
 
 describe("boostForVerbose", () => {
-  it("doubles all head/tail/entry limits", () => {
-    const lc = readFilterLineConfig();
-    const boosted = boostForVerbose(lc);
-    expect(boosted.genericHead).toBe(lc.genericHead * 2);
-    expect(boosted.genericTail).toBe(lc.genericTail * 2);
-    expect(boosted.fsMaxEntries).toBe(lc.fsMaxEntries * 2);
-    expect(boosted.searchMaxMatchesPerFile).toBe(lc.searchMaxMatchesPerFile * 2);
-  });
+	it("doubles all head/tail/entry limits (clamped to MAX)", () => {
+		const lc = readFilterLineConfig();
+		const boosted = boostForVerbose(lc);
+		expect(boosted.genericHead).toBe(Math.min(lc.genericHead * 2, 500));
+		expect(boosted.genericTail).toBe(Math.min(lc.genericTail * 2, 500));
+		expect(boosted.fsMaxEntries).toBe(Math.min(lc.fsMaxEntries * 2, 1000));
+		expect(boosted.searchMaxMatchesPerFile).toBe(
+			Math.min(lc.searchMaxMatchesPerFile * 2, 1000),
+		);
+	});
 
   it("does not double non-limit fields", () => {
     const lc = readFilterLineConfig();
@@ -2203,9 +2205,34 @@ describe("boostForVerbose", () => {
     expect(boosted.jsonMaxValueLength).toBe(lc.jsonMaxValueLength);
   });
 
-  it("does not change logMaxConsecutiveDupes", () => {
-    const lc = readFilterLineConfig();
-    const boosted = boostForVerbose(lc);
-    expect(boosted.logMaxConsecutiveDupes).toBe(lc.logMaxConsecutiveDupes);
-  });
+	it("does not change logMaxConsecutiveDupes", () => {
+		const lc = readFilterLineConfig();
+		const boosted = boostForVerbose(lc);
+		expect(boosted.logMaxConsecutiveDupes).toBe(lc.logMaxConsecutiveDupes);
+	});
+
+	it("re-clamps boosted values to MAX constants (N2 fix)", () => {
+		// Simulate a user who set REASONIX_FILTER_TEST_HEAD=500 (the max).
+		// Without re-clamping, verbose boost would produce 1000 > MAX_LINE_LINES.
+		process.env.REASONIX_FILTER_TEST_HEAD = "500";
+		process.env.REASONIX_FILTER_GENERIC_TAIL = "500";
+		process.env.REASONIX_FILTER_FS_MAX_ENTRIES = "1000";
+		try {
+			const lc = readFilterLineConfig();
+			expect(lc.testHead).toBe(500);
+			expect(lc.genericTail).toBe(500);
+			expect(lc.fsMaxEntries).toBe(1000);
+
+			const boosted = boostForVerbose(lc);
+			// 500 * 2 = 1000, but MAX_LINE_LINES = 500 → clamped back to 500
+			expect(boosted.testHead).toBe(500);
+			expect(boosted.genericTail).toBe(500);
+			// 1000 * 2 = 2000, but MAX_ENTRIES = 1000 → clamped back to 1000
+			expect(boosted.fsMaxEntries).toBe(1000);
+		} finally {
+			delete process.env.REASONIX_FILTER_TEST_HEAD;
+			delete process.env.REASONIX_FILTER_GENERIC_TAIL;
+			delete process.env.REASONIX_FILTER_FS_MAX_ENTRIES;
+		}
+	});
 });

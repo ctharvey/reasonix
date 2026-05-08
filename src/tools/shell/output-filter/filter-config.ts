@@ -96,40 +96,48 @@ const MAX_DEPTH = 10;
 const MAX_VALUE_LENGTH = 10_000;
 
 /** Boost head/tail/entry limits when the user requested verbose output.
- *  Non-limit fields (jsonMaxDepth, jsonMaxValueLength) are left unchanged. */
+ * Non-limit fields (jsonMaxDepth, jsonMaxValueLength) are left unchanged.
+ * Re-clamps after multiplication so the env-var ceiling guarantee holds:
+ * a value clamped to MAX during read stays ≤ MAX even after the boost. */
 export function boostForVerbose(lc: FilterLineConfig): FilterLineConfig {
-  return {
-    genericHead: lc.genericHead * VERBOSE_MULTIPLIER,
-    genericTail: lc.genericTail * VERBOSE_MULTIPLIER,
-    testHead: lc.testHead * VERBOSE_MULTIPLIER,
-    testTail: lc.testTail * VERBOSE_MULTIPLIER,
-    buildHead: lc.buildHead * VERBOSE_MULTIPLIER,
-    buildTail: lc.buildTail * VERBOSE_MULTIPLIER,
-    lintHead: lc.lintHead * VERBOSE_MULTIPLIER,
-    lintTail: lc.lintTail * VERBOSE_MULTIPLIER,
-    typecheckHead: lc.typecheckHead * VERBOSE_MULTIPLIER,
-    typecheckTail: lc.typecheckTail * VERBOSE_MULTIPLIER,
-    gitDiffFileHead: lc.gitDiffFileHead * VERBOSE_MULTIPLIER,
-    gitDiffTail: lc.gitDiffTail * VERBOSE_MULTIPLIER,
-    gitLogHead: lc.gitLogHead * VERBOSE_MULTIPLIER,
-    gitLogTail: lc.gitLogTail * VERBOSE_MULTIPLIER,
-    gitStatusHead: lc.gitStatusHead * VERBOSE_MULTIPLIER,
-    gitStatusTail: lc.gitStatusTail * VERBOSE_MULTIPLIER,
-    logHead: lc.logHead * VERBOSE_MULTIPLIER,
-    logTail: lc.logTail * VERBOSE_MULTIPLIER,
-    logMaxConsecutiveDupes: lc.logMaxConsecutiveDupes,
-    fsMaxEntries: lc.fsMaxEntries * VERBOSE_MULTIPLIER,
-    fsHeadLines: lc.fsHeadLines * VERBOSE_MULTIPLIER,
-    fsTailLines: lc.fsTailLines * VERBOSE_MULTIPLIER,
-    searchMaxMatchesPerFile: lc.searchMaxMatchesPerFile * VERBOSE_MULTIPLIER,
-    searchMaxFiles: lc.searchMaxFiles * VERBOSE_MULTIPLIER,
-    searchHeadLines: lc.searchHeadLines * VERBOSE_MULTIPLIER,
-    searchTailLines: lc.searchTailLines * VERBOSE_MULTIPLIER,
-    jsonMaxKeysPerObject: lc.jsonMaxKeysPerObject * VERBOSE_MULTIPLIER,
-    jsonMaxArrayItems: lc.jsonMaxArrayItems * VERBOSE_MULTIPLIER,
-    jsonMaxDepth: lc.jsonMaxDepth,
-    jsonMaxValueLength: lc.jsonMaxValueLength,
-  };
+	return {
+		genericHead: Math.min(lc.genericHead * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		genericTail: Math.min(lc.genericTail * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		testHead: Math.min(lc.testHead * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		testTail: Math.min(lc.testTail * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		buildHead: Math.min(lc.buildHead * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		buildTail: Math.min(lc.buildTail * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		lintHead: Math.min(lc.lintHead * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		lintTail: Math.min(lc.lintTail * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		typecheckHead: Math.min(lc.typecheckHead * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		typecheckTail: Math.min(lc.typecheckTail * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		gitDiffFileHead: Math.min(lc.gitDiffFileHead * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		gitDiffTail: Math.min(lc.gitDiffTail * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		gitLogHead: Math.min(lc.gitLogHead * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		gitLogTail: Math.min(lc.gitLogTail * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		gitStatusHead: Math.min(lc.gitStatusHead * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		gitStatusTail: Math.min(lc.gitStatusTail * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		logHead: Math.min(lc.logHead * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		logTail: Math.min(lc.logTail * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		logMaxConsecutiveDupes: lc.logMaxConsecutiveDupes,
+		fsMaxEntries: Math.min(lc.fsMaxEntries * VERBOSE_MULTIPLIER, MAX_ENTRIES),
+		fsHeadLines: Math.min(lc.fsHeadLines * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		fsTailLines: Math.min(lc.fsTailLines * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		searchMaxMatchesPerFile: Math.min(
+			lc.searchMaxMatchesPerFile * VERBOSE_MULTIPLIER,
+			MAX_ENTRIES,
+		),
+		searchMaxFiles: Math.min(lc.searchMaxFiles * VERBOSE_MULTIPLIER, MAX_ENTRIES),
+		searchHeadLines: Math.min(lc.searchHeadLines * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		searchTailLines: Math.min(lc.searchTailLines * VERBOSE_MULTIPLIER, MAX_LINE_LINES),
+		jsonMaxKeysPerObject: Math.min(
+			lc.jsonMaxKeysPerObject * VERBOSE_MULTIPLIER,
+			MAX_ENTRIES,
+		),
+		jsonMaxArrayItems: Math.min(lc.jsonMaxArrayItems * VERBOSE_MULTIPLIER, MAX_ENTRIES),
+		jsonMaxDepth: lc.jsonMaxDepth,
+		jsonMaxValueLength: lc.jsonMaxValueLength,
+	};
 }
 
 /** Load per-category filter line counts from env vars (REASONIX_FILTER_*). */
