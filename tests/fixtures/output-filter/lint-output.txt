@@ -1,0 +1,14 @@
+$ eslint src/
+[exit 0]
+
+/home/user/project/src/index.ts
+  3:10  warning  Unexpected var, use let or const instead  no-var  error
+  5:1   error    Unexpected console statement                no-console  error
+  12:8  warning  'x' is defined but never used               no-unused-vars  error
+  20:5   error    Expected '===' and instead saw '=='         eqeqeq  error
+  31:14  warning  Missing return type on function             @typescript-eslint/explicit-function-return-type  error
+  45:3   error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any  error
+  60:1   warning  Unexpected console statement                no-console  error
+  78:7   error    Unreachable code                            no-unreachable  error
+
+Γ£û 7 problems (4 errors, 3 warnings)

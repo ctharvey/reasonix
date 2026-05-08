@@ -1,0 +1,13 @@
+$ ls -la src/
+[exit 0]
+drwxr-xr-x   5 user  staff    160 May  7 10:00 .
+drwxr-xr-x  20 user  staff    640 May  7 10:00 ..
+-rw-r--r--   1 user  staff   1024 May  7 10:00 app.ts
+-rw-r--r--   1 user  staff    2048 May  7 10:00 config.ts
+-rw-r--r--   1 user  staff    5120 May  7 10:00 index.ts
+drwxr-xr-x   8 user  staff    256 May  7 10:00 components
+-rw-r--r--   1 user  staff    3072 May  7 10:00 main.ts
+drwxr-xr-x  12 user  staff    384 May  7 10:00 services
+-rw-r--r--   1 user  staff   4096 May  7 10:00 utils.ts
+drwxr-xr-x   3 user  staff     96 May  7 10:00 hooks
+-rw-r--r--   1 user  staff   1536 May  7 10:00 types.ts

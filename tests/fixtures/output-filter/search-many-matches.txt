@@ -1,0 +1,59 @@
+$ rg "TODO" src/
+[exit 0]
+src/config.ts
+10:TODO: refactor this (#123)
+25:TODO: add validation (#456)
+42:TODO: handle edge case (#789)
+55:TODO: improve error messages
+67:TODO: add tests for new feature
+78:TODO: consider caching
+90:TODO: fix race condition
+102:TODO: document this function
+115:TODO: remove deprecated API
+128:TODO: update dependencies
+141:TODO: optimize query
+155:TODO: add retry logic
+168:TODO: handle timeout
+180:TODO: improve logging
+193:TODO: add pagination
+206:TODO: sanitize input
+219:TODO: rate limit check
+
+src/service.ts
+5:TODO: implement retry
+18:TODO: add metrics
+31:TODO: handle errors
+44:TODO: cache results
+57:TODO: add auth check
+70:TODO: validate input
+83:TODO: sanitize output
+96:TODO: add logging
+109:TODO: implement caching
+122:TODO: fix memory leak
+135:TODO: update types
+148:TODO: add integration test
+161:TODO: improve performance
+174:TODO: add config option
+187:TODO: handle timeout
+200:TODO: cleanup code
+
+src/utils.ts
+3:TODO: extract helper
+15:TODO: add types
+27:TODO: document function
+39:TODO: add unit test
+51:TODO: remove dead code
+63:TODO: fix bug
+75:TODO: optimize loop
+87:TODO: add error handling
+99:TODO: update API
+111:TODO: refactor
+123:TODO: add validation
+135:TODO: improve naming
+147:TODO: add constants
+159:TODO: handle edge case
+171:TODO: cleanup
+183:TODO: add JSDoc
+195:TODO: update README
+207:TODO: fix lint
+219:TODO: add CI config

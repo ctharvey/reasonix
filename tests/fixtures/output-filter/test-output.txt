@@ -1,0 +1,29 @@
+$ npm test
+[exit 0]
+> project@1.0.0 test
+> vitest run
+
+ Γ£ô src/__tests__/config.test.ts (12 tests) 45ms
+ Γ£ô src/__tests__/service.test.ts (8 tests) 32ms
+ Γ£ô src/__tests__/utils.test.ts (15 tests) 28ms
+ Γ£ô src/__tests__/api.test.ts (20 tests) 156ms
+ Γ£ô src/__tests__/integration.test.ts (5 tests) 2100ms
+ Γ£ô src/__tests__/unit.test.ts (30 tests) 89ms
+ Γ£ô src/__tests__/helpers.test.ts (10 tests) 15ms
+ Γ£ô src/__tests__/middleware.test.ts (7 tests) 42ms
+ Γ£ô src/__tests__/routes.test.ts (18 tests) 67ms
+ Γ£ô src/__tests__/db.test.ts (14 tests) 320ms
+ Γ£ô src/__tests__/auth.test.ts (9 tests) 78ms
+ Γ£ô src/__tests__/validators.test.ts (11 tests) 35ms
+ Γ£ô src/__tests__/transformers.test.ts (6 tests) 22ms
+ Γ£ô src/__tests__/cache.test.ts (4 tests) 18ms
+ Γ£ô src/__tests__/queue.test.ts (3 tests) 12ms
+ Γ£ô src/__tests__/scheduler.test.ts (8 tests) 45ms
+ Γ£ô src/__tests__/logger.test.ts (5 tests) 9ms
+ Γ£ô src/__tests__/errors.test.ts (7 tests) 14ms
+ Γ£ô src/__tests__/types.test.ts (2 tests) 8ms
+
+ Test Files  19 passed (19)
+      Tests  194 passed (194)
+   Start at  14:30:01
+   Duration  3.24s (transform 450ms, setup 120ms, collect 89ms, tests 3.1s)
