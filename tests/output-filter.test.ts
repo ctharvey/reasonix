@@ -306,44 +306,59 @@ describe("filterShellOutput", () => {
       timedOut: false,
     };
     const result = filterShellOutput(formatted, meta);
-  expect(result).not.toContain("raw_output_id=");
+    expect(result).not.toContain("raw_output_id=");
   });
 
   it("error-bypass stores raw output for recovery", () => {
-  resetRawOutputStore();
-  const input = "$ bad-cmd\n[exit 1]\nerror output";
-  filterShellOutput(input, { tool: "run_command", command: "bad-cmd", exitCode: 1, timedOut: false });
-  const store = getRawOutputStore();
-  expect(store.size).toBe(1);
-  const entry = store.get(1);
-  expect(entry).toBeDefined();
-  expect(entry!.command).toBe("bad-cmd");
-  expect(entry!.tool).toBe("run_command");
+    resetRawOutputStore();
+    const input = "$ bad-cmd\n[exit 1]\nerror output";
+    filterShellOutput(input, {
+      tool: "run_command",
+      command: "bad-cmd",
+      exitCode: 1,
+      timedOut: false,
+    });
+    const store = getRawOutputStore();
+    expect(store.size).toBe(1);
+    const entry = store.get(1);
+    expect(entry).toBeDefined();
+    expect(entry!.command).toBe("bad-cmd");
+    expect(entry!.tool).toBe("run_command");
   });
 
   it("timeout-bypass stores raw output for recovery", () => {
-  resetRawOutputStore();
-  const input = "$ slow-cmd\n[killed after timeout]\npartial output";
-  filterShellOutput(input, { tool: "run_command", command: "slow-cmd", exitCode: null, timedOut: true });
-  const store = getRawOutputStore();
-  expect(store.size).toBe(1);
-  const entry = store.get(1);
-  expect(entry).toBeDefined();
-  expect(entry!.command).toBe("slow-cmd");
+    resetRawOutputStore();
+    const input = "$ slow-cmd\n[killed after timeout]\npartial output";
+    filterShellOutput(input, {
+      tool: "run_command",
+      command: "slow-cmd",
+      exitCode: null,
+      timedOut: true,
+    });
+    const store = getRawOutputStore();
+    expect(store.size).toBe(1);
+    const entry = store.get(1);
+    expect(entry).toBeDefined();
+    expect(entry!.command).toBe("slow-cmd");
   });
 
   it("error-bypass records rawOutputId in telemetry", () => {
-  resetRawOutputStore();
-  resetFilterTelemetryStore();
-  const input = "$ bad-cmd\n[exit 1]\nerror output";
-  filterShellOutput(input, { tool: "run_command", command: "bad-cmd", exitCode: 1, timedOut: false });
-  const telStore = getFilterTelemetryStore();
-  const entries = telStore.getEntries();
-  expect(entries).toHaveLength(1);
-  expect(entries[0]!.rawOutputId).not.toBeNull();
-  expect(entries[0]!.rawOutputId).toBe(1);
+    resetRawOutputStore();
+    resetFilterTelemetryStore();
+    const input = "$ bad-cmd\n[exit 1]\nerror output";
+    filterShellOutput(input, {
+      tool: "run_command",
+      command: "bad-cmd",
+      exitCode: 1,
+      timedOut: false,
+    });
+    const telStore = getFilterTelemetryStore();
+    const entries = telStore.getEntries();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.rawOutputId).not.toBeNull();
+    expect(entries[0]!.rawOutputId).toBe(1);
   });
-  });
+});
 
 // ΓöÇΓöÇ parseResultMeta ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
@@ -1223,7 +1238,7 @@ describe("readFilterLineConfig", () => {
     process.env.REASONIX_FILTER_TYPECHECK_TAIL = "10";
     const cfg = readFilterLineConfig();
     expect(cfg.typecheckHead).toBe(5);
-  expect(cfg.typecheckTail).toBe(10);
+    expect(cfg.typecheckTail).toBe(10);
   });
 
   it("clamps env values above MAX_LINE_LINES (500) to the ceiling", () => {
@@ -1255,7 +1270,7 @@ describe("readFilterLineConfig", () => {
     const cfg = readFilterLineConfig();
     expect(cfg.testHead).toBe(100);
   });
-  });
+});
 
 // ΓöÇΓöÇ Filter options acceptance (lint/typecheck/git-status accept opts) ΓöÇ
 
@@ -1731,38 +1746,38 @@ describe("normalizeCommand", () => {
   });
 
   it("displayCommand always matches input, even after normalization", () => {
-  const cmd = "eslint src/ lib/ --ext .ts";
-  const r = normalizeCommand(cmd);
-  expect(r.displayCommand).toBe(cmd);
+    const cmd = "eslint src/ lib/ --ext .ts";
+    const r = normalizeCommand(cmd);
+    expect(r.displayCommand).toBe(cmd);
   });
 
   it("raw option bypasses normalization entirely", () => {
-  const r = normalizeCommand("ruff check src/", { raw: true });
-  expect(r.normalized).toBe(false);
-  expect(r.executedCommand).toBe("ruff check src/");
-  expect(r.displayCommand).toBe("ruff check src/");
+    const r = normalizeCommand("ruff check src/", { raw: true });
+    expect(r.normalized).toBe(false);
+    expect(r.executedCommand).toBe("ruff check src/");
+    expect(r.displayCommand).toBe("ruff check src/");
   });
 
   it("raw option bypasses normalization for eslint", () => {
-  const r = normalizeCommand("eslint .", { raw: true });
-  expect(r.normalized).toBe(false);
-  expect(r.executedCommand).toBe("eslint .");
+    const r = normalizeCommand("eslint .", { raw: true });
+    expect(r.normalized).toBe(false);
+    expect(r.executedCommand).toBe("eslint .");
   });
 
   it("raw option with quoted path preserves quotes", () => {
-  const cmd = 'eslint "path with spaces"';
-  const r = normalizeCommand(cmd, { raw: true });
-  expect(r.executedCommand).toBe(cmd);
-  expect(r.normalized).toBe(false);
+    const cmd = 'eslint "path with spaces"';
+    const r = normalizeCommand(cmd, { raw: true });
+    expect(r.executedCommand).toBe(cmd);
+    expect(r.normalized).toBe(false);
   });
 
   it("normalizeCommand with quoted paths uses tokenizer correctly", () => {
-  const r = normalizeCommand('eslint "src/lib"');
-  expect(r.normalized).toBe(true);
-  // tokenizeCommand strips quotes: tokens = ["eslint", "src/lib"]
-  expect(r.executedCommand).toBe("eslint src/lib -f json");
+    const r = normalizeCommand('eslint "src/lib"');
+    expect(r.normalized).toBe(true);
+    // tokenizeCommand strips quotes: tokens = ["eslint", "src/lib"]
+    expect(r.executedCommand).toBe("eslint src/lib -f json");
   });
-  });
+});
 
 // ΓöÇΓöÇ Filesystem listing filter ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
