@@ -1,0 +1,9 @@
+$ git status
+[exit 0]
+On branch main
+Changes to be committed:
+  modified:   src/foo.ts
+  modified:   src/bar.ts
+
+Untracked files:
+  new-file.ts

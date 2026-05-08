@@ -1,0 +1,39 @@
+[Command: git status]
+[Working directory: /home/user/project]
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  [31mmodified:   src/app.ts[m
+  [32mnew file:   src/utils.ts[m
+  [31mdeleted:    src/old.ts[m
+
+Untracked files:
+  [31msrc/config.ts[m
+  [31mspec/[m
+
+Changes to be committed:
+  [32mnew file:   src/index.ts[m
+  [32mnew file:   README.md[m
+
+line100
+line101
+line102
+line103
+line104
+line105
+line106
+line107
+line108
+line109
+line110
+line111
+line112
+line113
+line114
+line115
+line116
+line117
+line118
+line119
+line120

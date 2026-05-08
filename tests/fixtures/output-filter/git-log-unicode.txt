@@ -1,0 +1,18 @@
+$ git log --oneline -20
+[exit 0]
+e4a2b3c feat: µùÑµ£¼Φ¬₧πâ¡πé▒πâ╝πâ½πé╡πâ¥πâ╝πâêπéÆΦ┐╜σèá
+a1b2c3d fix: ╨╕╤ü╨┐╤Ç╨░╨▓╨╗╨╡╨╜╨░ ╨╛╤ê╨╕╨▒╨║╨░ ╨║╨╛╨┤╨╕╤Ç╨╛╨▓╨║╨╕
+f5e6d7c refactor: τº╗ΘÖñσ╖▓σ╝âτö¿τÜä API µû╣µ│ò
+c8b9a0e feat: ≡ƒÄë add emoji support to messages
+d1e2f3a docs: aktualisiere README auf Deutsch
+b4c5d6e test: a├▒adir pruebas para el m├│dulo de paginaci├│n
+g7h8i9f chore: ≡ƒöä mise ├á jour des d├⌐pendances
+j0k1l2m fix: Σ┐«σñìΣ╕¡µûçτ╝ûτáüΘù«Θóÿ
+n3o4p5q feat: ╨┐╨╛╨┤╨┤╨╡╤Ç╨╢╨║╨░ ╨║╨╕╤Ç╨╕╨╗╨╗╨╕╤å╤ï ╨▓ ╨┐╨╛╨╕╤ü╨║╨╡
+r6s7t8u refactor: τ╡▒σÉêπâåπé╣πâêπü«µö╣σûä
+v9w0x1y docs: aggiorna la documentazione italiana
+z2a3b4c fix: corriger la traduction fran├ºaise
+d5e6f7g feat: ≡ƒîÉ a├▒adir soporte multiidioma
+h8i9j0k chore: ∞óà∞åì∞ä▒ ∞ùàδì░∞¥┤φè╕
+l1m2n3o test: φò£Ω╡¡∞û┤ φàî∞èñφè╕ ∞╝Ç∞¥┤∞èñ ∞╢öΩ░Ç
+p4q5r6s fix: Σ┐«σ╛⌐τ╣üΘ½öΣ╕¡µûçΘí»τñ║σòÅΘíî
