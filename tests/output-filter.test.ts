@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   type ClassifiedCommand,
   classifyCommand,
@@ -18,6 +18,7 @@ import {
   type GenericFilterOptions,
   genericFilter,
 } from "../src/tools/shell/output-filter/filters/generic.js";
+import * as genericModule from "../src/tools/shell/output-filter/filters/generic.js";
 import { gitDiffFilter } from "../src/tools/shell/output-filter/filters/git-diff.js";
 import { gitLogFilter } from "../src/tools/shell/output-filter/filters/git-log.js";
 import { gitShowFilter } from "../src/tools/shell/output-filter/filters/git-show.js";
@@ -357,6 +358,41 @@ describe("filterShellOutput", () => {
     expect(entries).toHaveLength(1);
     expect(entries[0]!.rawOutputId).not.toBeNull();
     expect(entries[0]!.rawOutputId).toBe(1);
+  });
+
+  it("fallback (catch) path stores raw output for recovery (N4)", () => {
+    resetRawOutputStore();
+    resetFilterTelemetryStore();
+    // Force the try block in filterShellOutput to throw by making
+    // genericFilter throw. An unclassified command routes to generic.
+    const spy = vi.spyOn(genericModule, "genericFilter");
+    spy.mockImplementation(() => {
+      throw new Error("simulated filter crash");
+    });
+    try {
+      const input = "$ unknown-cmd\nsome output\nmore lines";
+      filterShellOutput(input, {
+        tool: "run_command",
+        command: "unknown-cmd",
+        exitCode: 0,
+        timedOut: false,
+      });
+      // The fallback catch block should store raw output
+      const store = getRawOutputStore();
+      expect(store.size).toBe(1);
+      const entry = store.get(1);
+      expect(entry).toBeDefined();
+      expect(entry!.command).toBe("unknown-cmd");
+      // Telemetry should record the fallback
+      const telStore = getFilterTelemetryStore();
+      const entries = telStore.getEntries();
+      expect(entries).toHaveLength(1);
+      expect(entries[0]!.filterKind).toBe("fallback");
+      expect(entries[0]!.fallbackUsed).toBe(true);
+      expect(entries[0]!.rawOutputId).toBe(1);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 
