@@ -11,6 +11,8 @@ import {
   type RunCommandResult,
   runCommand,
 } from "./shell/exec.js";
+import { normalizeCommand } from "./shell/output-filter/command-normalizer.js";
+import { filterShellOutput, getRawOutputStore } from "./shell/output-filter/index.js";
 import { isCommandAllowed } from "./shell/parse.js";
 
 export {
@@ -102,14 +104,20 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
           description:
             'Full command line. POSIX-ish quoting. Chain operators `|`, `||`, `&&`, `;` and file redirects `>` / `>>` / `<` / `2>` / `2>>` / `2>&1` / `&>` work natively (no shell). Background `&`, heredoc `<<`, env-var expansion `$VAR`, and command substitution `$(…)` are rejected (or passed through as literal in the case of `$VAR`). To pass an operator character as a literal argument (e.g. a regex), wrap it in quotes: `grep "a|b" file.txt`.',
         },
-        timeoutSec: {
-          type: "integer",
-          description: `Override the default ${timeoutSec}s timeout for a single command.`,
-        },
+      timeoutSec: {
+        type: "integer",
+        description: `Override the default ${timeoutSec}s timeout for a single command.`,
       },
-      required: ["command"],
+      outputMode: {
+        type: "string",
+        enum: ["filtered", "raw"],
+        description:
+          'Output filtering mode. "filtered" (default) applies category-aware compression to reduce token usage while preserving semantics. "raw" bypasses all filtering and returns the verbatim command output.',
+      },
     },
-    fn: async (args: { command: string; timeoutSec?: number }, ctx) => {
+    required: ["command"],
+  },
+  fn: async (args: { command: string; timeoutSec?: number; outputMode?: string }, ctx) => {
       const cmd = args.command.trim();
       if (!cmd) throw new Error("run_command: empty command");
       const effectiveTimeout = Math.max(1, Math.min(600, args.timeoutSec ?? timeoutSec));
@@ -129,13 +137,31 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
         }
         // "run_once" — fall through and execute
       }
-      const result = await runCommand(cmd, {
-        cwd: rootDir,
-        timeoutSec: effectiveTimeout,
-        maxOutputChars,
-        signal: ctx?.signal,
-      });
-      return formatCommandResult(cmd, result);
+	// Raw mode bypasses normalization — the caller wants the exact
+	// command they typed, not a rewritten version with injected format
+	// flags.
+	const nr = normalizeCommand(cmd, { raw: args.outputMode === "raw" });
+	const result = await runCommand(nr.executedCommand, {
+		cwd: rootDir,
+		timeoutSec: effectiveTimeout,
+		maxOutputChars,
+		signal: ctx?.signal,
+	});
+	const formatted = formatCommandResult(
+		cmd,
+		result,
+		nr.normalized ? nr.executedCommand : undefined,
+	);
+	// "raw" mode bypasses all filtering — return verbatim output.
+	if (args.outputMode === "raw") {
+		return formatted;
+	}
+	return filterShellOutput(formatted, {
+		tool: "run_command",
+		command: cmd,
+		exitCode: result.exitCode,
+		timedOut: result.timedOut,
+	});
     },
   });
 
@@ -178,12 +204,17 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
         }
         // "run_once" — fall through and execute
       }
-      const result = await jobs.start(cmd, {
-        cwd: rootDir,
-        waitSec: args.waitSec,
-        signal: ctx?.signal,
-      });
-      return formatJobStart(result);
+    const result = await jobs.start(cmd, {
+      cwd: rootDir,
+      waitSec: args.waitSec,
+      signal: ctx?.signal,
+    });
+    return filterShellOutput(formatJobStart(result), {
+      tool: "run_background",
+      command: cmd,
+      exitCode: result.exitCode,
+      timedOut: false,
+    });
     },
   });
 
@@ -216,7 +247,13 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
         tailLines: args.tailLines ?? 80,
       });
       if (!out) return `job ${args.jobId}: not found (use list_jobs)`;
-      return formatJobRead(args.jobId, out);
+      const cmd = out.command ?? "";
+      return filterShellOutput(formatJobRead(args.jobId, out), {
+        tool: "job_output",
+        command: cmd,
+        exitCode: out.exitCode,
+        timedOut: false,
+      });
     },
   });
 
@@ -278,7 +315,12 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
     fn: async (args: { jobId: number }) => {
       const rec = await jobs.stop(args.jobId);
       if (!rec) return `job ${args.jobId}: not found`;
-      return formatJobStop(rec);
+      return filterShellOutput(formatJobStop(rec), {
+        tool: "stop_job",
+        command: rec.command,
+        exitCode: rec.exitCode,
+        timedOut: false,
+      });
     },
   });
 
@@ -294,6 +336,44 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
       const all = jobs.list();
       if (all.length === 0) return "(no background jobs started this session)";
       return all.map(formatJobRow).join("\n");
+    },
+  });
+
+  registry.register({
+    name: "raw_output",
+    description:
+      "Retrieve the full unfiltered output of a previously filtered shell command by its raw_output_id. When output is filtered (compressed), a recovery marker like `[filtered 84211 chars -> 3240 chars · raw_output_id=42]` is appended. Use this tool to retrieve the original output. Returns a clear message if the ID is not found or has expired.",
+    readOnly: true,
+    stormExempt: true,
+    parameters: {
+      type: "object",
+      properties: {
+        id: {
+          type: "integer",
+          description: "The raw_output_id from a filtered output marker.",
+        },
+        tailLines: {
+          type: "integer",
+          description: "Return only the last N lines of the raw output. 0 = unlimited. Default: 0.",
+        },
+        maxChars: {
+          type: "integer",
+          description: "Cap the returned raw output to this many characters. 0 = unlimited. Default: 0.",
+        },
+      },
+      required: ["id"],
+    },
+    fn: async (args: { id: number; tailLines?: number; maxChars?: number }) => {
+      const store = getRawOutputStore();
+      const entry = store.getFiltered(args.id, {
+        tailLines: args.tailLines ?? 0,
+        maxChars: args.maxChars ?? 0,
+      });
+      if (!entry) {
+        return `raw_output: id ${args.id} not found. Stored outputs expire at session end. Use list_jobs to check active jobs.`;
+      }
+      const header = `[raw_output_id=${entry.id} · command: ${entry.command} · tool: ${entry.tool} · ${entry.raw.length} chars]`;
+      return `${header}\n${entry.raw}`;
     },
   });
 
@@ -350,9 +430,18 @@ function tailLines(s: string, n: number): string {
   return [`[… ${dropped} earlier lines …]`, ...lines.slice(-n)].join("\n");
 }
 
-export function formatCommandResult(cmd: string, r: RunCommandResult): string {
+export function formatCommandResult(
+  cmd: string,
+  r: RunCommandResult,
+  executedCommand?: string,
+): string {
   const header = r.timedOut
     ? `$ ${cmd}\n[killed after timeout]`
     : `$ ${cmd}\n[exit ${r.exitCode ?? "?"}]`;
-  return r.output ? `${header}\n${r.output}` : header;
+  const executedLine =
+    executedCommand && executedCommand !== cmd
+      ? `[executed as: ${executedCommand}]`
+      : "";
+  const headerBlock = executedLine ? `${header}\n${executedLine}` : header;
+  return r.output ? `${headerBlock}\n${r.output}` : headerBlock;
 }

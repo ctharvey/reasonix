@@ -2,6 +2,7 @@ import type { ToolCall } from "../types.js";
 
 /** Mutating calls clear prior read-only entries so a post-edit re-read isn't flagged as repeat. */
 export type IsMutating = (call: ToolCall) => boolean;
+/** Exempt tools skip storm-breaker accounting entirely — read-only inspectors expected to be called repeatedly with identical args (e.g. job_output, list_jobs, raw_output). */
 export type IsStormExempt = (call: ToolCall) => boolean;
 
 interface RecentEntry {
@@ -10,7 +11,7 @@ interface RecentEntry {
   readOnly: boolean;
 }
 
-/** Tracks (name, args) repeats; mutating calls clear prior read-only entries while still counting amongst themselves. */
+/** Tracks (name, args) repeats; mutating calls clear prior read-only entries while still counting amongst themselves. Exempt tools are skipped entirely. */
 export class StormBreaker {
   private readonly windowSize: number;
   private readonly threshold: number;
@@ -33,6 +34,7 @@ export class StormBreaker {
   inspect(call: ToolCall): { suppress: boolean; reason?: string } {
     const name = call.function?.name;
     if (!name) return { suppress: false };
+    // Exempt tools never enter storm accounting — they are expected to repeat.
     if (this.isStormExempt?.(call)) return { suppress: false };
     const args = call.function?.arguments ?? "";
     const mutating = this.isMutating ? this.isMutating(call) : false;
