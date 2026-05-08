@@ -102,6 +102,10 @@ import type { ToolRegistry } from "../../tools.js";
 import type { ChoiceOption } from "../../tools/choice.js";
 import type { PlanStep, StepCompletion } from "../../tools/plan.js";
 import { formatCommandResult, runCommand } from "../../tools/shell.js";
+import {
+  getFilterTelemetryStore,
+  getRawOutputStore,
+} from "../../tools/shell/output-filter/index.js";
 import { registerSkillTools } from "../../tools/skills.js";
 import { formatSubagentResult, spawnSubagent } from "../../tools/subagent.js";
 import { webFetch } from "../../tools/web.js";
@@ -1695,8 +1699,18 @@ function AppInner({
     }
   }, [session, loop, codeMode, syncPendingCount, log, pendingEdits, startupInfoHints, system]);
 
+  // Stable callback for session teardown: emit filter telemetry summary
+  // and release raw output store. Wrapped in useCallback so the identity
+  // is stable across renders — useQuit's SIGINT handler only registers
+  // once instead of churning on every re-render.
+  const onBeforeQuit = useCallback(() => {
+    const summary = getFilterTelemetryStore().formatSummary();
+    if (summary) process.stderr.write(`\n${summary}\n`);
+    getRawOutputStore().clear();
+  }, []);
+
   // Esc handles "abort the current turn" separately; Ctrl+C is the universal "I'm done" key.
-  const quitProcess = useQuit(transcriptRef);
+  const quitProcess = useQuit(transcriptRef, onBeforeQuit);
 
   // Ctrl+D = standard TUI exit (matches the boot-banner hint). Always-on
   // — no modal / picker should swallow it.

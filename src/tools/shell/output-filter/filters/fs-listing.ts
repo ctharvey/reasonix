@@ -80,7 +80,9 @@ export function fsListingFilter(
   }
 
   // Detect tree-style output: lines with box-drawing characters (Γö£ΓöÇΓöÇ ΓööΓöÇΓöÇ Γöé).
-  const treeStyle = body.some((ln) => /^[ΓöéΓö£ΓööΓöÇΓöÉΓöÿΓöñ]/.test(ln) || /\s[ΓöéΓö£ΓööΓöÇΓöÉΓöÿΓöñ]/.test(ln));
+  const treeStyle = body.some(
+    (ln) => /^[ΓöéΓö£ΓööΓöÇΓöÉΓöÿΓöñ]/.test(ln) || /\s[ΓöéΓö£ΓööΓöÇΓöÉΓöÿΓöñ]/.test(ln),
+  );
 
   // Detect find-style output: one path per line, no special characters.
   // Find output is one-path-per-line ΓÇö just a list of absolute or relative paths.

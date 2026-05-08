@@ -12,6 +12,7 @@ export type { TruncationRepairResult } from "./truncation.js";
 export { scavengeToolCalls } from "./scavenge.js";
 export type { ScavengeOptions, ScavengeResult } from "./scavenge.js";
 export { StormBreaker } from "./storm.js";
+export type { IsStormExempt } from "./storm.js";
 
 export interface RepairReport {
   scavenged: number;
@@ -27,7 +28,7 @@ export interface ToolCallRepairOptions {
   maxScavenge?: number;
   /** Mutating calls clear the storm window so a post-edit verify-read isn't seen as a repeat. */
   isMutating?: IsMutating;
-  /** Cheap state-inspection calls that should never trip repeat-loop suppression. */
+  /** Exempt tools are never counted toward the repeat threshold (e.g. job_output, list_jobs, raw_output). */
   isStormExempt?: IsStormExempt;
 }
 

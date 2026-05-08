@@ -30,7 +30,7 @@ export interface ToolDefinition<A = any, R = any> {
   readOnlyCheck?: (args: A) => boolean;
   /** Safe to dispatch concurrently with other parallel-safe calls in the same turn. Default false — opt-in only. */
   parallelSafe?: boolean;
-  /** Excluded from repeat-loop storm accounting; use only for cheap, state-inspection tools. */
+  /** Exempt from storm-breaker repeat-loop accounting — read-only inspector tools that are expected to be called repeatedly with identical args (e.g. job_output, list_jobs, raw_output). */
   stormExempt?: boolean;
   /** When true, skip saving full result to disk on truncation. Use for tools that might leak secrets (get_env) or return trivial data. */
   skipTruncationSave?: boolean;

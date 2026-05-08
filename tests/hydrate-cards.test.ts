@@ -132,8 +132,7 @@ describe("hydrateCardsFromMessages", () => {
       {
         role: "assistant",
         content: "recovered",
-        // biome-ignore lint/suspicious/noExplicitAny: a corrupt persisted session can carry a streaming-delta tool_call with no function, though the type marks it required
-        tool_calls: [{ id: "call-x", type: "function" } as any],
+        tool_calls: [{ id: "call-x", type: "function" } as any], // a corrupt persisted session can carry a streaming-delta tool_call with no function, though the type marks it required
       },
     ];
     const cards = hydrateCardsFromMessages(msgs);
