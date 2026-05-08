@@ -366,15 +366,16 @@ describe("registerShellTools — dispatch integration", () => {
   it("registers run_command + background tools", () => {
     const registry = new ToolRegistry();
     registerShellTools(registry, { rootDir: tmp });
-    // run_command (sync) + run_background / job_output / wait_for_job /
-    // stop_job / list_jobs (background family).
-    expect(registry.size).toBe(6);
-    expect(registry.has("run_command")).toBe(true);
-    expect(registry.has("run_background")).toBe(true);
-    expect(registry.has("job_output")).toBe(true);
-    expect(registry.has("wait_for_job")).toBe(true);
-    expect(registry.has("stop_job")).toBe(true);
-    expect(registry.has("list_jobs")).toBe(true);
+  // run_command (sync) + run_background / job_output / wait_for_job /
+  // stop_job / list_jobs (background family) + raw_output.
+  expect(registry.size).toBe(7);
+  expect(registry.has("run_command")).toBe(true);
+  expect(registry.has("run_background")).toBe(true);
+  expect(registry.has("job_output")).toBe(true);
+  expect(registry.has("wait_for_job")).toBe(true);
+  expect(registry.has("stop_job")).toBe(true);
+  expect(registry.has("list_jobs")).toBe(true);
+  expect(registry.has("raw_output")).toBe(true);
   });
 
   it("flags wait_for_job as parallelSafe + stormExempt — concurrent waits on different jobs are safe and polling-loop is the intended pattern", () => {

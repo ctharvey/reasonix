@@ -1,18 +1,17 @@
 import type { WriteStream } from "node:fs";
 import { type MutableRefObject, useCallback, useEffect, useRef } from "react";
 
-/** Ctrl+C / SIGINT → flush transcript + `process.exit(0)`.
- *
- * We call `process.exit` directly rather than Ink's `exit()` because
- * the singleton stdin reader keeps a `data` listener attached —
- * `exit()` would unmount the React tree but leave the event loop
- * alive and the terminal would hang.
- *
- * A `process.on("exit")` listener is also registered as a last-resort
- * fallback so `onBeforeExit` runs on SIGTERM, SIGHUP, natural exit,
- * and any other `process.exit()` call that bypasses SIGINT. This
- * listener only does synchronous work (telemetry summary + store
- * clear), so it is safe inside the exit event. */
+/** Ctrl+C / SIGINT → flush transcript + `process.exit(0)`. */
+// We call `process.exit` directly rather than Ink's `exit()` because
+// the singleton stdin reader keeps a `data` listener attached —
+// `exit()` would unmount the React tree but leave the event loop
+// alive and the terminal would hang.
+//
+// A `process.on("exit")` listener is also registered as a last-resort
+// fallback so `onBeforeExit` runs on SIGTERM, SIGHUP, natural exit,
+// and any other `process.exit()` call that bypasses SIGINT. This
+// listener only does synchronous work (telemetry summary + store
+// clear), so it is safe inside the exit event.
 export function useQuit(
   transcriptRef: MutableRefObject<WriteStream | null>,
   onBeforeExit?: () => void,
