@@ -2839,6 +2839,15 @@ function AppInner({
               syncPendingCount,
               ctxMax: DEEPSEEK_CONTEXT_TOKENS[loop.model] ?? DEFAULT_CONTEXT_TOKENS,
             });
+            // Update the StatusRow filter pill with the latest filter telemetry.
+            const filterSummary = getFilterTelemetryStore().getSummary();
+            if (filterSummary.totalCalls > 0) {
+              agentStore.dispatch({
+                type: "filter.update",
+                savingsPct: filterSummary.averageSavingsPct,
+                savedTokens: filterSummary.estimatedSavedTokens,
+              });
+            }
             if (session) {
               const m = loadSessionMeta(session);
               const cost = (m.totalCostUsd ?? 0) + (ev.stats?.cost ?? 0);

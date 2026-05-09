@@ -30,6 +30,10 @@ export interface StatusBar {
   balance?: number;
   balanceCurrency?: string;
   cacheHit: number;
+  /** Output filter savings % this session (0 = no savings or filtering off). */
+  filterSavingsPct: number;
+  /** Estimated tokens saved by output filtering this session. */
+  filterSavedTokens: number;
   countdownSeconds?: number;
   recording?: { sizeBytes: number; events: number; path: string };
   /** null → user is on a custom model that doesn't match any preset; pill falls back to the model id. */
@@ -76,6 +80,8 @@ export function initialState(session: SessionInfo, cards: ReadonlyArray<Card> = 
       cost: 0,
       sessionCost: 0,
       cacheHit: 0,
+      filterSavingsPct: 0,
+      filterSavedTokens: 0,
     },
     focusedCardId: null,
     toasts: [],

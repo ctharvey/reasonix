@@ -242,6 +242,12 @@ const usageShow = z.object({
   elapsedMs: z.number().nonnegative().optional(),
 });
 
+const filterUpdate = z.object({
+  type: z.literal("filter.update"),
+  savingsPct: z.number().min(0).max(100),
+  savedTokens: z.number().int().nonnegative(),
+});
+
 const doctorShow = z.object({
   type: z.literal("doctor.show"),
   id: cardId,
@@ -351,6 +357,7 @@ export const AgentEventSchema = z.discriminatedUnion("type", [
   ctxShow,
   doctorShow,
   usageShow,
+  filterUpdate,
 ]);
 
 export type AgentEvent = z.infer<typeof AgentEventSchema>;

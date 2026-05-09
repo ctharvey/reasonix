@@ -7,6 +7,30 @@ export function shellOutputFiltersEnabled(): boolean {
   return true;
 }
 
+/** Runtime override set by /filter on|off. Null = use env var. */
+let runtimeOverride: boolean | null = null;
+
+/** Set a runtime override for filter enable/disable (persists until cleared or process exit). */
+export function setFilterRuntimeOverride(on: boolean): void {
+  runtimeOverride = on;
+}
+
+/** Clear the runtime override, reverting to env var control. */
+export function clearFilterRuntimeOverride(): void {
+  runtimeOverride = null;
+}
+
+/** Check if a runtime override is active. */
+export function hasFilterRuntimeOverride(): boolean {
+  return runtimeOverride !== null;
+}
+
+/** Combined check: runtime override wins over env var. Used by filterShellOutput(). */
+export function isFilterEnabled(): boolean {
+  if (runtimeOverride !== null) return runtimeOverride;
+  return shellOutputFiltersEnabled();
+}
+
 /** Read a numeric env var, returning the default if missing or invalid.
  * Clamps to [0, max] when max is provided ΓÇö prevents absurd values
  * that would effectively disable filtering or cause OOM. */

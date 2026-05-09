@@ -878,6 +878,17 @@ export const EN: TranslationSchema = {
       failed: "▸ dashboard failed to start: {reason}",
       starting: "▸ starting dashboard server…",
     },
+    filter: {
+      enabled: "▸ output filter ON for this session",
+      disabled:
+        "▸ output filter OFF for this session (REASONIX_OUTPUT_FILTERS still controls new sessions)",
+      statusOff: "output filter is OFF (set REASONIX_OUTPUT_FILTERS or /filter on)",
+      statusNoData: "output filter active — no tool calls filtered yet",
+      summary:
+        "▸ output filter session report\n  raw: {raw} chars → filtered: {filtered} chars\n  estimated saved: {saved} tokens ({pct}% avg)\n  calls: {filteredCalls} filtered, {fallbacks} fallbacks\n  {bar}",
+      topHeader: "▸ top savings by command",
+      topNoData: "no filter data yet — run some tool calls first",
+    },
     observability: {
       contextInfo: "context: ~{total} of {max} ({pct}%) · system {sys} · tools {tools} · log {log}",
       compactStarting: "▸ folding older turns into a summary…",

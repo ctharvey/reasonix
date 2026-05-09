@@ -22,6 +22,8 @@ export interface StatsPanelProps {
   budgetUsd?: number | null;
   rootDir?: string;
   sessionName?: string | null;
+  /** Output filter savings — null means no data / filtering off. */
+  filterSavings?: { savingsPct: number; savedTokens: number } | null;
 }
 
 export function StatsPanel({
@@ -35,6 +37,7 @@ export function StatsPanel({
   budgetUsd,
   rootDir,
   sessionName,
+  filterSavings,
 }: StatsPanelProps) {
   const coldStart = summary.turns <= COLD_START_TURNS;
   return (
@@ -50,6 +53,7 @@ export function StatsPanel({
         sessionName={sessionName ?? null}
         updateAvailable={updateAvailable}
         balance={balance ?? null}
+        filterSavings={filterSavings ?? null}
       />
       <ChromeRule />
       {budgetUsd !== null && budgetUsd !== undefined ? (
@@ -70,6 +74,7 @@ function ChromeRow({
   sessionName,
   updateAvailable,
   balance,
+  filterSavings,
 }: {
   editMode?: EditMode;
   planMode?: boolean;
@@ -81,6 +86,7 @@ function ChromeRow({
   sessionName?: string | null;
   updateAvailable?: string | null;
   balance?: { currency: string; total: number } | null;
+  filterSavings?: { savingsPct: number; savedTokens: number } | null;
 }) {
   const modePill = pickModePill(planMode, editMode);
   const proLabel = t("statsPanel.pro");
@@ -98,6 +104,9 @@ function ChromeRow({
     : "";
   const costLabel = `[${formatCost(summary.totalCostUsd, balance?.currency)}]`;
   const cacheLabel = "[c ▰▰▰▰▰▰ 100%]";
+  const filterPct = filterSavings?.savingsPct ?? 0;
+  const filterColor = filterPct >= 70 ? COLOR.ok : filterPct >= 40 ? COLOR.warn : COLOR.err;
+  const filterLabel = "[f ▰▰▰▰▰▰ 100%]";
   const updateLabel = updateAvailable ? `↑ ${updateAvailable}` : "";
 
   // Greedy width-aware fit. Layout (every gap = 2 cells, applied as suffix
@@ -122,6 +131,7 @@ function ChromeRow({
 
   const balW = balance ? GAP + stringWidth(balanceLabel) : 0;
   const cacheW = GAP + stringWidth(cacheLabel);
+  const filterW = filterSavings ? GAP + stringWidth(filterLabel) : 0;
   const sessionW = sessionName ? SEP_ARROW + stringWidth(sessionName) : 0;
   const updateW = updateLabel ? GAP + stringWidth(updateLabel) : 0;
 
@@ -129,6 +139,8 @@ function ChromeRow({
   if (showBalance) budget -= balW;
   const showCache = budget >= cacheW;
   if (showCache) budget -= cacheW;
+  const showFilter = filterW > 0 && budget >= filterW;
+  if (showFilter) budget -= filterW;
   const showSession = sessionW > 0 && budget >= sessionW;
   if (showSession) budget -= sessionW;
   const showUpdate = updateW > 0 && budget >= updateW;
@@ -217,6 +229,17 @@ function ChromeRow({
           <Text color={coldStart ? undefined : cacheColor} dimColor={coldStart}>
             {coldStart && summary.turns === 0 ? "—" : `${cachePct}%`}
           </Text>
+          <Text dimColor>{"]"}</Text>
+        </>
+      ) : null}
+      {showFilter && filterSavings ? (
+        <>
+          <Text> </Text>
+          <Text dimColor>{"["}</Text>
+          <Text dimColor>{"f "}</Text>
+          <Bar ratio={filterPct / 100} color={filterColor} cells={6} />
+          <Text> </Text>
+          <Text color={filterColor}>{`${filterPct}%`}</Text>
           <Text dimColor>{"]"}</Text>
         </>
       ) : null}
