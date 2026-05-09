@@ -1131,6 +1131,16 @@ export const zhCN: TranslationSchema = {
       tokenResetting: "▸ 正在轮换仪表板 token 并重启服务…",
       tokenReset: "▸ 仪表板 token 已轮换。新 URL：",
     },
+    filter: {
+      enabled: "▸ 输出过滤器已为此会话开启",
+      disabled: "▸ 输出过滤器已为此会话关闭（REASONIX_OUTPUT_FILTERS 仍控制新会话）",
+      statusOff: "输出过滤器已关闭（设置 REASONIX_OUTPUT_FILTERS 或 /filter on）",
+      statusNoData: "输出过滤器已激活 — 尚无工具调用被过滤",
+      summary:
+        "▸ 输出过滤器会话报告\n  原始：{raw} 字符 → 过滤后：{filtered} 字符\n  预计节省：{saved} tokens（{pct}% 平均）\n  调用：{filteredCalls} 已过滤，{fallbacks} 回退\n  {bar}",
+      topHeader: "▸ 按命令的节省排行",
+      topNoData: "尚无过滤数据 — 请先运行一些工具调用",
+    },
     observability: {
       contextInfo: "上下文：~{total} / {max}（{pct}%）· 系统 {sys} · 工具 {tools} · 日志 {log}",
       compactStarting: "▸ 正在折叠旧轮次为摘要…",

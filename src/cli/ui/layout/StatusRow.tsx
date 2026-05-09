@@ -161,6 +161,12 @@ export function StatusRow({
             </Pill>
           </>
         )}
+        {status.filterSavingsPct > 0 && (
+          <>
+            <Sep />
+            <Text color={TONE.brand}>{`filter ${status.filterSavingsPct}%`}</Text>
+          </>
+        )}
       </Box>
     </Box>
   );

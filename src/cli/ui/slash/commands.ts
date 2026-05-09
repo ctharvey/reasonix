@@ -123,6 +123,12 @@ export const SLASH_COMMANDS: readonly SlashCommandSpec[] = [
     summary: "show context-window breakdown (system / tools / log / input)",
   },
   {
+    cmd: "filter",
+    group: "info",
+    argsHint: "[top|on|off]",
+    summary: "output filter savings report · top = per-command · on/off = toggle filtering",
+  },
+  {
     cmd: "stats",
     group: "info",
     summary:

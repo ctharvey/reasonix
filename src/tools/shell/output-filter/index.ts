@@ -3,8 +3,8 @@ import { type CommandCategory, classifyCommand } from "./classifier.js";
 import {
   type FilterLineConfig,
   boostForVerbose,
+  isFilterEnabled,
   readFilterLineConfig,
-  shellOutputFiltersEnabled,
 } from "./filter-config.js";
 import { type FilterMeta, isVerboseCommand, parseResultMeta } from "./filter-meta.js";
 import { buildFilter } from "./filters/build-output.js";
@@ -26,6 +26,7 @@ import { recordFilterTelemetry } from "./telemetry.js";
 
 export type { FilterMeta };
 export { classifyCommand } from "./classifier.js";
+export { isFilterEnabled, shellOutputFiltersEnabled } from "./filter-config.js";
 export { genericFilter } from "./filters/generic.js";
 export { getRawOutputStore, RawOutputStore, resetRawOutputStore } from "./raw-output-store.js";
 export { stripAnsi } from "./strip-ansi.js";
@@ -100,7 +101,7 @@ function categoryFilter(
 
 /** Filter a formatted shell tool result for model context. Returns possibly compressed string. */
 export function filterShellOutput(formatted: string, meta: FilterMeta): string {
-  if (!shellOutputFiltersEnabled()) {
+  if (!isFilterEnabled()) {
     return formatted;
   }
 

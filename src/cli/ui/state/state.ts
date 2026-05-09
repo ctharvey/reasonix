@@ -44,6 +44,10 @@ export interface StatusBar {
   sessionOutputTokens: number;
   /** Wall-clock ms for the most recent completed turn. */
   lastTurnMs: number;
+  /** Output filter savings % this session (0 = no savings or filtering off). */
+  filterSavingsPct: number;
+  /** Estimated tokens saved by output filtering this session. */
+  filterSavedTokens: number;
   countdownSeconds?: number;
   recording?: { sizeBytes: number; events: number; path: string };
   reasoningEffort?: import("../../../config.js").ReasoningEffort;
@@ -100,6 +104,8 @@ export function initialState(session: SessionInfo, cards: ReadonlyArray<Card> = 
       sessionInputTokens: 0,
       sessionOutputTokens: 0,
       lastTurnMs: 0,
+      filterSavingsPct: 0,
+      filterSavedTokens: 0,
     },
     focusedCardId: null,
     toasts: [],

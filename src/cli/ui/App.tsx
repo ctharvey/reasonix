@@ -3512,6 +3512,15 @@ function AppInner({
               syncPendingCount,
               ctxMax: resolveContextTokens(loop.model),
             });
+            // Update the StatusRow filter pill with the latest filter telemetry.
+            const filterSummary = getFilterTelemetryStore().getSummary();
+            if (filterSummary.totalCalls > 0) {
+              agentStore.dispatch({
+                type: "filter.update",
+                savingsPct: filterSummary.averageSavingsPct,
+                savedTokens: filterSummary.estimatedSavedTokens,
+              });
+            }
             if (session) {
               const m = loadSessionMeta(session);
               const cost = (m.totalCostUsd ?? 0) + (ev.stats?.cost ?? 0);

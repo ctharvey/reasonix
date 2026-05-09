@@ -116,6 +116,16 @@ export function reduce(state: AgentState, event: AgentEvent): AgentState {
     case "mode.change":
       return { ...state, status: { ...state.status, mode: event.mode } };
 
+    case "filter.update":
+      return {
+        ...state,
+        status: {
+          ...state.status,
+          filterSavingsPct: event.savingsPct,
+          filterSavedTokens: event.savedTokens,
+        },
+      };
+
     case "network.change":
       return {
         ...state,
