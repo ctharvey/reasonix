@@ -6,7 +6,10 @@ import { jsonFilter } from "../shell/output-filter/filters/json-output.js";
 import { logFilter } from "../shell/output-filter/filters/logs.js";
 import { searchFilter } from "../shell/output-filter/filters/search.js";
 import { getRawOutputStore } from "../shell/output-filter/raw-output-store.js";
-import { recordFilterTelemetry } from "../shell/output-filter/telemetry.js";
+import {
+  recordFilterTelemetry,
+  recordFilterTelemetryWithTokens,
+} from "../shell/output-filter/telemetry.js";
 import { type ToolFilterCategory, classifyTool, isShellTool } from "./classify-tool.js";
 import { compressReadFile } from "./compress-read-file.js";
 
@@ -23,6 +26,7 @@ function toolCategoryFilter(
     case "read_file":
       return compressReadFile(result, {
         importCollapse: lc.readImportCollapse === 1,
+        cssRuleCollapse: lc.readCssRuleCollapse === 1,
         blankLineMax: lc.readBlankLineMax,
         commentThreshold: lc.readCommentThreshold,
       });
@@ -110,10 +114,12 @@ export function filterToolResult(toolName: string, result: string): string {
         tool: toolName,
         filteredChars: filtered.filteredChars,
       });
-      recordFilterTelemetry({
+      recordFilterTelemetryWithTokens({
         command: toolName,
         tool: toolName,
         filterKind: category,
+        rawText: result,
+        filteredText: filtered.output,
         rawChars: filtered.rawChars,
         filteredChars: filtered.filteredChars,
         rawOutputId: rawId,
@@ -125,10 +131,12 @@ export function filterToolResult(toolName: string, result: string): string {
 
     // Record telemetry even for non-truncated results (shows filter activity).
     if (filtered.rawChars !== filtered.filteredChars) {
-      recordFilterTelemetry({
+      recordFilterTelemetryWithTokens({
         command: toolName,
         tool: toolName,
         filterKind: category,
+        rawText: result,
+        filteredText: filtered.output,
         rawChars: filtered.rawChars,
         filteredChars: filtered.filteredChars,
         rawOutputId: null,

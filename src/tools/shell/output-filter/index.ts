@@ -32,6 +32,7 @@ export { getRawOutputStore, RawOutputStore, resetRawOutputStore } from "./raw-ou
 export { stripAnsi } from "./strip-ansi.js";
 export { getFilterTelemetryStore, resetFilterTelemetryStore } from "./telemetry.js";
 export type { FilterTelemetryEntry, FilterTelemetrySummary } from "./telemetry.js";
+export { recordFilterTelemetryWithTokens } from "./telemetry.js";
 
 /** Route a classified command to its category-specific filter, using resolved line config. */
 function categoryFilter(
