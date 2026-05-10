@@ -81,6 +81,8 @@ export interface FilterLineConfig {
   readBlankLineMax: number;
   /** read_file compressor: comment block threshold before collapsing. Default: 10. */
   readCommentThreshold: number;
+  /** read_file compressor: collapse consecutive CSS rules with same properties. Default: true (1=on, 0=off). */
+  readCssRuleCollapse: number;
 }
 
 const DEFAULT_FILTER_LINES: FilterLineConfig = {
@@ -117,6 +119,7 @@ const DEFAULT_FILTER_LINES: FilterLineConfig = {
   readImportCollapse: 1,
   readBlankLineMax: 1,
   readCommentThreshold: 10,
+  readCssRuleCollapse: 1,
 };
 
 /** Multiplier applied to head/tail limits when the command includes verbose flags. */
@@ -168,6 +171,7 @@ export function boostForVerbose(lc: FilterLineConfig): FilterLineConfig {
     readImportCollapse: lc.readImportCollapse,
     readBlankLineMax: lc.readBlankLineMax,
     readCommentThreshold: lc.readCommentThreshold,
+    readCssRuleCollapse: lc.readCssRuleCollapse,
   };
 }
 
@@ -306,6 +310,11 @@ export function readFilterLineConfig(): FilterLineConfig {
       "REASONIX_FILTER_READ_COMMENT_THRESHOLD",
       DEFAULT_FILTER_LINES.readCommentThreshold,
       50,
+    ),
+    readCssRuleCollapse: envInt(
+      "REASONIX_FILTER_READ_CSS_RULE_COLLAPSE",
+      DEFAULT_FILTER_LINES.readCssRuleCollapse,
+      1,
     ),
   };
 }

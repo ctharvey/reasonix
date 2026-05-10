@@ -1,10 +1,12 @@
-/** Compressor for read_file results: symbol-preserving import collapse, smart comment threshold (10+ lines, JSDoc-aware), blank line compression. */
+/** Compressor for read_file results: symbol-preserving import collapse, CSS rule dedup, smart comment threshold (10+ lines, JSDoc-aware), blank line compression. */
 
 import type { FilterResult } from "../shell/output-filter/filters/generic.js";
 
 export interface ReadFileCompressOptions {
   /** Collapse consecutive import lines into a condensed summary. Default: true. */
   importCollapse?: boolean;
+  /** Collapse consecutive CSS rules sharing the same property names. Default: true. */
+  cssRuleCollapse?: boolean;
   /** Maximum consecutive blank lines to preserve. Default: 1. */
   blankLineMax?: number;
   /** Minimum lines in a comment block before collapsing. Default: 10. */
@@ -13,6 +15,7 @@ export interface ReadFileCompressOptions {
 
 const DEFAULT_OPTS: Required<ReadFileCompressOptions> = {
   importCollapse: true,
+  cssRuleCollapse: true,
   blankLineMax: 1,
   commentThreshold: 10,
 };
@@ -267,6 +270,100 @@ function stripTrailingBlanks(lines: string[]): string[] {
   return lines.slice(0, end);
 }
 
+/** Match a CSS property line inside a rule block: `  property: value;` */
+const CSS_PROP_RE = /^\s+([\w-]+)\s*:/;
+
+/** Match a CSS rule closing brace. */
+const CSS_CLOSE_RE = /^\s*}\s*$/;
+
+/** Match a CSS selector line (opens a rule block): starts with non-whitespace
+ *  and ends with `{`, or is a standalone `{` after a selector on the prior line. */
+const CSS_SELECTOR_RE = /^[^/\s][^/{]*\{\s*$/;
+
+/** Collapse consecutive CSS rule blocks that share the same property names.
+ *  Preserves the first and last rules in a group, replaces middle ones with a summary. */
+function collapseCssBlocks(lines: string[]): string[] {
+  const result: string[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    // Look for a CSS selector line.
+    if (!CSS_SELECTOR_RE.test(lines[i]!)) {
+      result.push(lines[i]!);
+      i++;
+      continue;
+    }
+
+    // Gather the full rule block: selector + properties + closing brace.
+    const blockStart = i;
+    const block: string[] = [lines[i]!];
+    i++;
+    while (i < lines.length && !CSS_CLOSE_RE.test(lines[i]!)) {
+      block.push(lines[i]!);
+      i++;
+    }
+    if (i < lines.length) {
+      block.push(lines[i]!); // closing brace
+      i++;
+    }
+
+    // Extract the property names from this block (not values — for grouping).
+    const props = block
+      .map((l) => {
+        const m = CSS_PROP_RE.exec(l);
+        return m ? m[1]! : null;
+      })
+      .filter((p): p is string => p !== null);
+    const propKey = props.join("|");
+
+    // Look ahead for consecutive blocks with the same property signature.
+    const group: { block: string[]; propKey: string }[] = [{ block, propKey }];
+    while (i < lines.length && CSS_SELECTOR_RE.test(lines[i]!)) {
+      const nextBlock: string[] = [lines[i]!];
+      i++;
+      while (i < lines.length && !CSS_CLOSE_RE.test(lines[i]!)) {
+        nextBlock.push(lines[i]!);
+        i++;
+      }
+      if (i < lines.length) {
+        nextBlock.push(lines[i]!);
+        i++;
+      }
+      const nextProps = nextBlock
+        .map((l) => {
+          const m = CSS_PROP_RE.exec(l);
+          return m ? m[1]! : null;
+        })
+        .filter((p): p is string => p !== null);
+      const nextKey = nextProps.join("|");
+      if (nextKey === propKey) {
+        group.push({ block: nextBlock, propKey: nextKey });
+      } else {
+        // Different property signature — push the block back and stop grouping.
+        // Put the lines we consumed back by adjusting i to before this block.
+        i -= nextBlock.length;
+        break;
+      }
+    }
+
+    // If 3+ consecutive rules share the same property names, collapse.
+    if (group.length >= 3) {
+      result.push(...group[0]!.block);
+      const propNames = props.join(", ");
+      result.push(
+        `  /* [${group.length - 2} similar rule blocks omitted: same ${props.length} propert${props.length === 1 ? "y" : "ies"} (${propNames})] */`,
+      );
+      result.push(...group[group.length - 1]!.block);
+    } else {
+      for (const g of group) {
+        result.push(...g.block);
+      }
+    }
+  }
+
+  return result;
+}
+
 /** Main entry: compress a read_file result string. */
 export function compressReadFile(result: string, opts: ReadFileCompressOptions = {}): FilterResult {
   const rawChars = result.length;
@@ -279,6 +376,9 @@ export function compressReadFile(result: string, opts: ReadFileCompressOptions =
 
   if (config.importCollapse) {
     lines = collapseImports(lines);
+  }
+  if (config.cssRuleCollapse) {
+    lines = collapseCssBlocks(lines);
   }
   lines = collapseBlankLines(lines, config.blankLineMax);
   lines = compressCommentBlocks(lines, config.commentThreshold);

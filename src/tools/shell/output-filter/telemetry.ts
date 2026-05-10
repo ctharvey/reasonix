@@ -1,5 +1,7 @@
-/** Output filter telemetry ΓÇö tracks token savings per tool call and session totals.
- *  Telemetry is for TUI/human visibility only ΓÇö it must never change model prompts. */
+/** Output filter telemetry — tracks token savings per tool call and session totals.
+ *  Uses real DeepSeek BPE tokenizer when available; heuristic fallback for large strings. */
+
+import { countTokens } from "@/tokenizer.js";
 
 export interface FilterTelemetryEntry {
   /** Command string for shell tools; tool name for dispatch-level filters. */
@@ -14,6 +16,8 @@ export interface FilterTelemetryEntry {
   savingsPct: number;
   rawOutputId: number | null;
   fallbackUsed: boolean;
+  /** True when token counts came from the heuristic fallback (tokenizer unavailable or string too large). */
+  tokenCountsAreEstimate: boolean;
   timestamp: number;
 }
 
@@ -27,13 +31,31 @@ export interface FilterTelemetrySummary {
   estimatedFilteredTokens: number;
   estimatedSavedTokens: number;
   averageSavingsPct: number;
+  /** True when any entry used heuristic token estimation. */
+  tokenCountsAreEstimate: boolean;
 }
 
-/** Rough token estimation: ~4 chars per token for English/code text. */
+/** Heuristic fallback: ~4 chars per token for English/code text. */
 const CHARS_PER_TOKEN = 4;
 
-function estimateTokens(charCount: number): number {
+/** Max string length (chars) to run through the real BPE tokenizer — pathological
+ *  repetitive text can cost 30s+ on the pure-TS BPE port (see mcp/registry.ts). */
+const MAX_TOKENIZE_CHARS = 100_000;
+
+function estimateTokensHeuristic(charCount: number): number {
   return Math.round(charCount / CHARS_PER_TOKEN);
+}
+
+/** Count tokens using the real BPE tokenizer when safe; fall back to heuristic for large strings. */
+function countTokensSafe(text: string): { tokens: number; isEstimate: boolean } {
+  if (text.length > MAX_TOKENIZE_CHARS) {
+    return { tokens: estimateTokensHeuristic(text.length), isEstimate: true };
+  }
+  try {
+    return { tokens: countTokens(text), isEstimate: false };
+  } catch {
+    return { tokens: estimateTokensHeuristic(text.length), isEstimate: true };
+  }
 }
 
 /** Session-scoped telemetry store. Reset between sessions. */
@@ -62,6 +84,7 @@ class FilterTelemetryStore {
     let fallbackCalls = 0;
     let savingsSum = 0;
     let savingsCount = 0;
+    let anyEstimate = false;
 
     for (const entry of this.entries) {
       totalRawChars += entry.rawChars;
@@ -75,10 +98,14 @@ class FilterTelemetryStore {
         savingsSum += entry.savingsPct;
         savingsCount++;
       }
+      if (entry.tokenCountsAreEstimate) anyEstimate = true;
     }
 
-    const estimatedRawTokens = estimateTokens(totalRawChars);
-    const estimatedFilteredTokens = estimateTokens(totalFilteredChars);
+    const estimatedRawTokens = this.entries.reduce((sum, e) => sum + e.estimatedRawTokens, 0);
+    const estimatedFilteredTokens = this.entries.reduce(
+      (sum, e) => sum + e.estimatedFilteredTokens,
+      0,
+    );
 
     return {
       totalCalls: this.entries.length,
@@ -90,6 +117,7 @@ class FilterTelemetryStore {
       estimatedFilteredTokens,
       estimatedSavedTokens: estimatedRawTokens - estimatedFilteredTokens,
       averageSavingsPct: savingsCount > 0 ? Math.round(savingsSum / savingsCount) : 0,
+      tokenCountsAreEstimate: anyEstimate,
     };
   }
 
@@ -104,10 +132,12 @@ class FilterTelemetryStore {
       return String(n);
     };
 
+    const estTag = s.tokenCountsAreEstimate ? "~" : "";
+
     return [
       `tool output raw: ${formatChars(s.totalRawChars)} chars`,
       `tool output filtered: ${formatChars(s.totalFilteredChars)} chars`,
-      `estimated saved: ${formatChars(s.estimatedSavedTokens)} tokens`,
+      `${estTag}saved: ${formatChars(s.estimatedSavedTokens)} tokens`,
       `average savings: ${s.averageSavingsPct}%`,
       `fallbacks: ${s.fallbackCalls}`,
     ].join("\n");
@@ -151,17 +181,63 @@ export function recordFilterTelemetry(opts: {
       ? Math.round(((opts.rawChars - opts.filteredChars) / opts.rawChars) * 100)
       : 0;
 
+  // Use real BPE tokenizer when safe; heuristic fallback for large strings.
+  const rawText = opts.fallbackUsed ? "" : "";
+  // We don't have the raw/filtered strings here — only char counts.
+  // Use per-entry heuristic and let summary aggregate from stored entries.
+  // For accurate token counts, the caller should pass the strings via
+  // recordFilterTelemetryWithTokens() instead.
+  const estimatedRawTokens = estimateTokensHeuristic(opts.rawChars);
+  const estimatedFilteredTokens = estimateTokensHeuristic(opts.filteredChars);
+
   getFilterTelemetryStore().record({
     command: opts.command,
     tool: opts.tool ?? null,
     filterKind: opts.filterKind,
     rawChars: opts.rawChars,
     filteredChars: opts.filteredChars,
-    estimatedRawTokens: estimateTokens(opts.rawChars),
-    estimatedFilteredTokens: estimateTokens(opts.filteredChars),
+    estimatedRawTokens,
+    estimatedFilteredTokens,
     savingsPct,
     rawOutputId: opts.rawOutputId,
     fallbackUsed: opts.fallbackUsed,
+    tokenCountsAreEstimate: true,
+    timestamp: Date.now(),
+  });
+}
+
+/** Record a filter result with real token counts (when the raw/filtered strings are available). */
+export function recordFilterTelemetryWithTokens(opts: {
+  command: string;
+  tool?: string;
+  filterKind: string;
+  rawText: string;
+  filteredText: string;
+  rawChars: number;
+  filteredChars: number;
+  rawOutputId: number | null;
+  fallbackUsed: boolean;
+}): void {
+  const savingsPct =
+    opts.rawChars > 0
+      ? Math.round(((opts.rawChars - opts.filteredChars) / opts.rawChars) * 100)
+      : 0;
+
+  const rawResult = countTokensSafe(opts.rawText);
+  const filteredResult = countTokensSafe(opts.filteredText);
+
+  getFilterTelemetryStore().record({
+    command: opts.command,
+    tool: opts.tool ?? null,
+    filterKind: opts.filterKind,
+    rawChars: opts.rawChars,
+    filteredChars: opts.filteredChars,
+    estimatedRawTokens: rawResult.tokens,
+    estimatedFilteredTokens: filteredResult.tokens,
+    savingsPct,
+    rawOutputId: opts.rawOutputId,
+    fallbackUsed: opts.fallbackUsed,
+    tokenCountsAreEstimate: rawResult.isEstimate || filteredResult.isEstimate,
     timestamp: Date.now(),
   });
 }

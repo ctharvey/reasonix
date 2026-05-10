@@ -348,3 +348,126 @@ describe("compressReadFile — combined", () => {
     expect(result.output).toContain("comment lines omitted");
   });
 });
+
+describe("compressReadFile — CSS rule compression", () => {
+  it("collapses consecutive CSS rules with identical property names", () => {
+    const input = [
+      ".btn-primary {",
+      "  background: blue;",
+      "  color: white;",
+      "  padding: 8px 16px;",
+      "}",
+      ".btn-secondary {",
+      "  background: gray;",
+      "  color: white;",
+      "  padding: 8px 16px;",
+      "}",
+      ".btn-danger {",
+      "  background: red;",
+      "  color: white;",
+      "  padding: 8px 16px;",
+      "}",
+      ".btn-success {",
+      "  background: green;",
+      "  color: white;",
+      "  padding: 8px 16px;",
+      "}",
+      "",
+      "const x = 1;",
+    ].join("\n");
+
+    const result = compressReadFile(input, {
+      importCollapse: false,
+      cssRuleCollapse: true,
+      blankLineMax: 2,
+      commentThreshold: 50,
+    });
+    expect(result.truncated).toBe(true);
+    expect(result.output).toContain("omitted");
+    expect(result.output).toContain("same");
+    // First and last rules preserved
+    expect(result.output).toContain(".btn-primary");
+    expect(result.output).toContain(".btn-success");
+    // Middle rules collapsed
+    expect(result.output).not.toContain(".btn-secondary");
+    expect(result.output).not.toContain(".btn-danger");
+  });
+
+  it("does not collapse CSS rules with different property names", () => {
+    const input = [
+      ".container {",
+      "  max-width: 1200px;",
+      "  margin: 0 auto;",
+      "}",
+      ".wrapper {",
+      "  display: flex;",
+      "  gap: 16px;",
+      "}",
+      "",
+      "const x = 1;",
+    ].join("\n");
+
+    const result = compressReadFile(input, {
+      importCollapse: false,
+      cssRuleCollapse: true,
+      blankLineMax: 2,
+      commentThreshold: 50,
+    });
+    // Different property signatures — no collapse
+    expect(result.output).toContain(".container");
+    expect(result.output).toContain(".wrapper");
+  });
+
+  it("skips CSS collapse when cssRuleCollapse is false", () => {
+    const input = [
+      ".btn-primary {",
+      "  background: blue;",
+      "  color: white;",
+      "}",
+      ".btn-secondary {",
+      "  background: gray;",
+      "  color: white;",
+      "}",
+      ".btn-danger {",
+      "  background: red;",
+      "  color: white;",
+      "}",
+      "",
+      "const x = 1;",
+    ].join("\n");
+
+    const result = compressReadFile(input, {
+      importCollapse: false,
+      cssRuleCollapse: false,
+      blankLineMax: 2,
+      commentThreshold: 50,
+    });
+    expect(result.output).toContain(".btn-secondary");
+    expect(result.output).toContain(".btn-danger");
+  });
+
+  it("handles CSS with fewer than 3 similar rules (no collapse)", () => {
+    const input = [
+      ".btn-primary {",
+      "  background: blue;",
+      "  color: white;",
+      "}",
+      ".btn-secondary {",
+      "  background: gray;",
+      "  color: white;",
+      "}",
+      "",
+      "const x = 1;",
+    ].join("\n");
+
+    const result = compressReadFile(input, {
+      importCollapse: false,
+      cssRuleCollapse: true,
+      blankLineMax: 2,
+      commentThreshold: 50,
+    });
+    // Only 2 similar rules — below the 3-rule threshold
+    expect(result.output).toContain(".btn-primary");
+    expect(result.output).toContain(".btn-secondary");
+  });
+});
