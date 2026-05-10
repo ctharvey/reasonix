@@ -134,6 +134,7 @@ export function filterShellOutput(formatted: string, meta: FilterMeta): string {
     });
     recordFilterTelemetry({
       command: enriched.command,
+      tool: enriched.tool,
       filterKind: "error-bypass",
       rawChars: stripped.length,
       filteredChars: stripped.length,
@@ -165,6 +166,7 @@ export function filterShellOutput(formatted: string, meta: FilterMeta): string {
       });
       recordFilterTelemetry({
         command: enriched.command,
+        tool: enriched.tool,
         filterKind: category,
         rawChars: result.rawChars,
         filteredChars: result.filteredChars,
@@ -177,6 +179,7 @@ export function filterShellOutput(formatted: string, meta: FilterMeta): string {
 
     recordFilterTelemetry({
       command: enriched.command,
+      tool: enriched.tool,
       filterKind: category,
       rawChars: result.rawChars,
       filteredChars: result.filteredChars,
@@ -196,6 +199,7 @@ export function filterShellOutput(formatted: string, meta: FilterMeta): string {
     });
     recordFilterTelemetry({
       command: enriched.command,
+      tool: enriched.tool,
       filterKind: "fallback",
       rawChars: stripped.length,
       filteredChars: stripped.length,

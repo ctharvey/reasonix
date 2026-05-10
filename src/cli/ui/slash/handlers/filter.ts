@@ -66,10 +66,11 @@ function renderTop(): SlashResult {
     return { info: t("handlers.filter.topNoData") };
   }
 
-  // Aggregate by command
+  // Aggregate by source (tool name for dispatch-level, command for shell)
   const byCommand = new Map<string, { raw: number; filtered: number; count: number }>();
   for (const e of entries) {
-    const existing = byCommand.get(e.command);
+    const key = e.tool ?? e.command;
+    const existing = byCommand.get(key);
     if (existing) {
       existing.raw += e.rawChars;
       existing.filtered += e.filteredChars;
@@ -95,8 +96,8 @@ function renderTop(): SlashResult {
     .slice(0, 5);
 
   const lines = sorted.map((r, i) => {
-    const cmd = r.cmd.length > 20 ? `${r.cmd.slice(0, 19)}…` : r.cmd;
-    return ` #${i + 1} ${cmd.padEnd(22)} ${compactChars(r.raw)} → ${compactChars(r.filtered)}  (${r.savingsPct}%)`;
+    const src = r.cmd.length > 22 ? `${r.cmd.slice(0, 21)}…` : r.cmd;
+    return ` #${i + 1} ${src.padEnd(24)} ${compactChars(r.raw)} → ${compactChars(r.filtered)} (${r.savingsPct}%)`;
   });
 
   return {

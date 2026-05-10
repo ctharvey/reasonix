@@ -81,6 +81,7 @@ export class ToolRegistry {
   private readonly _lastMalformed = new Map<string, string>();
   /** Per-tool fingerprint of the last host-side gate rejection. */
   private readonly _lastGateRejection = new Map<string, string>();
+  private _resultFilter: ((name: string, result: string) => string) | null = null;
 
   constructor(opts: ToolRegistryOptions = {}) {
     this._autoFlatten = opts.autoFlatten !== false;
@@ -113,6 +114,11 @@ export class ToolRegistry {
       const idx = this._interceptors.findIndex((entry) => entry.id === normalized);
       if (idx >= 0) this._interceptors.splice(idx, 1);
     };
+  }
+
+  /** Set a post-execution result filter. Receives (toolName, resultString), returns filtered string. Inert until activated. */
+  setResultFilter(fn: ((name: string, result: string) => string) | null): void {
+    this._resultFilter = fn;
   }
 
   setAuditListener(fn: ToolCallAuditListener | null): void {
@@ -312,6 +318,8 @@ export class ToolRegistry {
         readTracker: opts.readTracker,
       });
       const str = typeof result === "string" ? result : JSON.stringify(result);
+      // Apply dispatch-level result filter before token/char truncation.
+      const filtered = this._resultFilter ? this._resultFilter(name, str) : str;
       // Pre-clip at dispatch so a single fat result can't balloon the
       // log (and disk session file) on its way in. Healing at load time
       // still catches pre-existing oversize entries; this closes the
@@ -321,7 +329,7 @@ export class ToolRegistry {
       // real context footprint, so CJK doesn't slip past at 2× density)
       // and `maxResultChars` (legacy). If both are set, apply both and
       // the tighter one wins; char-only callers keep their old behavior.
-      let clipped = str;
+      let clipped = filtered;
       if (opts.maxResultTokens !== undefined) {
         clipped = truncateForModelByTokens(clipped, opts.maxResultTokens);
       }

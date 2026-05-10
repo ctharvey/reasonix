@@ -15,6 +15,7 @@ import { t } from "../../i18n/index.js";
 import { specToRaw } from "../../mcp/spec.js";
 import { detectForeignAgentPlatform } from "../../memory/project.js";
 import { sanitizeName } from "../../memory/session.js";
+import { filterToolResult } from "../../tools/output-filter/index.js";
 import { markPhase } from "../startup-profile.js";
 import { chatCommand } from "./chat.js";
 
@@ -85,6 +86,8 @@ export async function codeCommand(opts: CodeOptions = {}): Promise<void> {
   markPhase(
     semantic.enabled ? "semantic_bootstrap_done_enabled" : "semantic_bootstrap_done_skipped",
   );
+  // Dispatch-level result filter — compresses non-shell tool outputs before model context.
+  tools.setResultFilter(filterToolResult);
 
   process.stderr.write(
     `${t("startup.codeRooted", {
