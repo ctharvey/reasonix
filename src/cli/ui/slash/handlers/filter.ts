@@ -6,6 +6,7 @@ import {
   isFilterEnabled,
   setFilterRuntimeOverride,
 } from "../../../../tools/shell/output-filter/filter-config.js";
+import { getRawOutputStore } from "../../../../tools/shell/output-filter/raw-output-store.js";
 import {
   type FilterTelemetrySummary,
   getFilterTelemetryStore,
@@ -30,6 +31,11 @@ const filter: SlashHandler = (args) => {
   // /filter top — per-command breakdown
   if (sub === "top") {
     return renderTop();
+  }
+
+  // /filter raw <id> — recover raw output by ID
+  if (sub === "raw") {
+    return renderRaw(args[1]);
   }
 
   // /filter bare — session summary
@@ -103,6 +109,36 @@ function renderTop(): SlashResult {
   return {
     info: `${t("handlers.filter.topHeader")}\n${lines.join("\n")}`,
   };
+}
+
+function renderRaw(idStr: string | undefined): SlashResult {
+  if (!idStr) {
+    return { info: t("handlers.filter.rawNoId") };
+  }
+  const id = Number(idStr);
+  if (!Number.isFinite(id) || id < 1) {
+    return { info: t("handlers.filter.rawInvalidId", { id: idStr }) };
+  }
+  const entry = getRawOutputStore().get(id);
+  if (!entry) {
+    return { info: t("handlers.filter.rawNotFound", { id }) };
+  }
+  const rawLines = entry.raw.split("\n").length;
+  const header = t("handlers.filter.rawHeader", {
+    id: entry.id,
+    command: entry.command,
+    tool: entry.tool,
+    rawLines,
+    filteredChars: entry.filteredChars,
+    rawChars: entry.raw.length,
+  });
+  // Cap displayed raw output to avoid flooding the TUI
+  const maxDisplayChars = 16_000;
+  const body =
+    entry.raw.length > maxDisplayChars
+      ? `${entry.raw.slice(0, maxDisplayChars)}\n[… ${(entry.raw.length - maxDisplayChars).toLocaleString()} more chars …]`
+      : entry.raw;
+  return { info: `${header}\n${body}` };
 }
 
 function compactChars(n: number): string {
