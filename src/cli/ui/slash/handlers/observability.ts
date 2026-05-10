@@ -7,6 +7,8 @@ import { pricingFor, resolveContextTokens } from "@/telemetry/stats.js";
 import { countTokensBounded } from "@/tokenizer.js";
 import { VERSION } from "@/version.js";
 import { writeClipboard } from "../../clipboard.js";
+import { isFilterEnabled } from "../../../../tools/shell/output-filter/filter-config.js";
+import { getFilterTelemetryStore } from "../../../../tools/shell/output-filter/telemetry.js";
 import { computeCtxBreakdown } from "../../ctx-breakdown.js";
 import { buildFeedbackDiagnostic, buildFeedbackIssueUrl } from "../../feedback.js";
 import { formatLifecycleStatus } from "../../lifecycle-observability.js";
@@ -121,6 +123,7 @@ const status: SlashHandler = (_args, loop, ctx) => {
   const workspaceLine = ctx.codeRoot
     ? t("handlers.observability.statusWorkspace", { path: ctx.codeRoot })
     : "";
+  const filterLine = buildFilterLine();
   const lines = [
     t("handlers.observability.statusModel", { model: loop.model }),
     t("handlers.observability.statusFlags", {
@@ -135,6 +138,7 @@ const status: SlashHandler = (_args, loop, ctx) => {
   ];
   if (cacheDetailLine) lines.splice(3, 0, cacheDetailLine);
   if (workspaceLine) lines.push(workspaceLine);
+  lines.push(filterLine);
   if (budgetLine) lines.push(budgetLine);
   if (pendingLine) lines.push(pendingLine);
   if (planLine) lines.push(planLine);
@@ -143,6 +147,23 @@ const status: SlashHandler = (_args, loop, ctx) => {
   if (dashLine) lines.push(dashLine);
   return { info: lines.join("\n") };
 };
+
+function buildFilterLine(): string {
+  if (!isFilterEnabled()) {
+    return t("handlers.filter.statusFilterOff");
+  }
+  const s = getFilterTelemetryStore().getSummary();
+  if (s.totalCalls === 0) {
+    return t("handlers.filter.statusFilterOff");
+  }
+  const bar = renderTinyBar(s.averageSavingsPct, 10);
+  return t("handlers.filter.statusFilter", {
+    bar,
+    pct: s.averageSavingsPct,
+    saved: compactNum(s.estimatedSavedTokens),
+    calls: s.filteredCalls,
+  });
+}
 
 function renderTinyBar(pct: number, width: number): string {
   const w = Math.max(4, width);

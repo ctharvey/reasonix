@@ -1212,6 +1212,13 @@ export const EN: TranslationSchema = {
         "▸ output filter session report\n  raw: {raw} chars → filtered: {filtered} chars\n  estimated saved: {saved} tokens ({pct}% avg)\n  calls: {filteredCalls} filtered, {fallbacks} fallbacks\n  {bar}",
       topHeader: "▸ top savings by command",
       topNoData: "no filter data yet — run some tool calls first",
+      rawNoId: "usage: /filter raw <id> — provide a raw output ID from a filter marker",
+      rawInvalidId: "invalid raw output ID: {id} — must be a positive integer",
+      rawNotFound: "raw output #{id} not found — entry expired or never stored",
+      rawHeader:
+        "▸ raw output #{id} · {command} ({tool})\n  {rawLines} lines · {rawChars} chars (filtered to {filteredChars})",
+      statusFilter: "  filter  {bar} {pct}% saved · {saved} tokens ({calls} calls)",
+      statusFilterOff: "  filter  OFF",
     },
     observability: {
       contextInfo: "context: ~{total} of {max} ({pct}%) · system {sys} · tools {tools} · log {log}",

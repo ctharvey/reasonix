@@ -437,6 +437,25 @@ describe("ui reducer", () => {
     s = reduce(s, { type: "composer.input", value: "n" });
     expect(s.composer.abortedHint).toBe(false);
   });
+
+  it("filter.update sets filterSavingsPct and filterSavedTokens on status", () => {
+    const s = run([{ type: "filter.update", savingsPct: 78, savedTokens: 4200 }]);
+    expect(s.status.filterSavingsPct).toBe(78);
+    expect(s.status.filterSavedTokens).toBe(4200);
+  });
+
+  it("filter.update with zero savings clears the pill", () => {
+    const s = run([{ type: "filter.update", savingsPct: 0, savedTokens: 0 }]);
+    expect(s.status.filterSavingsPct).toBe(0);
+    expect(s.status.filterSavedTokens).toBe(0);
+  });
+
+  it("filter.update overwrites previous values", () => {
+    const s1 = run([{ type: "filter.update", savingsPct: 50, savedTokens: 1000 }]);
+    const s2 = reduce(s1, { type: "filter.update", savingsPct: 82, savedTokens: 9000 });
+    expect(s2.status.filterSavingsPct).toBe(82);
+    expect(s2.status.filterSavedTokens).toBe(9000);
+  });
 });
 
 describe("event schema", () => {

@@ -1140,6 +1140,13 @@ export const zhCN: TranslationSchema = {
         "▸ 输出过滤器会话报告\n  原始：{raw} 字符 → 过滤后：{filtered} 字符\n  预计节省：{saved} tokens（{pct}% 平均）\n  调用：{filteredCalls} 已过滤，{fallbacks} 回退\n  {bar}",
       topHeader: "▸ 按命令的节省排行",
       topNoData: "尚无过滤数据 — 请先运行一些工具调用",
+      rawNoId: "用法：/filter raw <id> — 请提供过滤标记中的原始输出 ID",
+      rawInvalidId: "无效的原始输出 ID：{id} — 必须为正整数",
+      rawNotFound: "原始输出 #{id} 未找到 — 条目已过期或从未存储",
+      rawHeader:
+        "▸ 原始输出 #{id} · {command}（{tool}）\n  {rawLines} 行 · {rawChars} 字符（过滤至 {filteredChars}）",
+      statusFilter: "  过滤器 {bar} {pct}% 已节省 · {saved} tokens（{calls} 次调用）",
+      statusFilterOff: "  过滤器  关闭",
     },
     observability: {
       contextInfo: "上下文：~{total} / {max}（{pct}%）· 系统 {sys} · 工具 {tools} · 日志 {log}",
