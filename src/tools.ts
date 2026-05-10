@@ -60,9 +60,10 @@ export class ToolRegistry {
   private _planMode = false;
   private _interceptor: ToolInterceptor | null = null;
   private _auditListener: ToolCallAuditListener | null = null;
-  private _resultAugmenter: ToolResultAugmenter | null = null;
-  /** Per-tool fingerprint of the last call that failed schema validation. Cleared by any successful validation for that tool. */
-  private readonly _lastMalformed = new Map<string, string>();
+	private _resultAugmenter: ToolResultAugmenter | null = null;
+	/** Per-tool fingerprint of the last call that failed schema validation. Cleared by any successful validation for that tool. */
+	private readonly _lastMalformed = new Map<string, string>();
+	private _resultFilter: ((name: string, result: string) => string) | null = null;
 
   constructor(opts: ToolRegistryOptions = {}) {
     this._autoFlatten = opts.autoFlatten !== false;
@@ -81,6 +82,11 @@ export class ToolRegistry {
   /** At most one interceptor active; calling twice replaces. */
   setToolInterceptor(fn: ToolInterceptor | null): void {
     this._interceptor = fn;
+  }
+
+  /** Set a post-execution result filter. Receives (toolName, resultString), returns filtered string. Inert until activated. */
+  setResultFilter(fn: ((name: string, result: string) => string) | null): void {
+    this._resultFilter = fn;
   }
 
   setAuditListener(fn: ToolCallAuditListener | null): void {
@@ -238,6 +244,8 @@ export class ToolRegistry {
         confirmationGate: opts.confirmationGate,
       });
       const str = typeof result === "string" ? result : JSON.stringify(result);
+      // Apply dispatch-level result filter before token/char truncation.
+      const filtered = this._resultFilter ? this._resultFilter(name, str) : str;
       // Pre-clip at dispatch so a single fat result can't balloon the
       // log (and disk session file) on its way in. Healing at load time
       // still catches pre-existing oversize entries; this closes the
@@ -247,7 +255,7 @@ export class ToolRegistry {
       // real context footprint, so CJK doesn't slip past at 2× density)
       // and `maxResultChars` (legacy). If both are set, apply both and
       // the tighter one wins; char-only callers keep their old behavior.
-      let clipped = str;
+      let clipped = filtered;
       if (opts.maxResultTokens !== undefined) {
         clipped = truncateForModelByTokens(clipped, opts.maxResultTokens);
       }

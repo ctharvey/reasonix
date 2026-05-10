@@ -2,7 +2,10 @@
  *  Telemetry is for TUI/human visibility only ΓÇö it must never change model prompts. */
 
 export interface FilterTelemetryEntry {
+  /** Command string for shell tools; tool name for dispatch-level filters. */
   command: string;
+  /** Tool name when available (dispatch-level filters set this). Null for shell-only entries. */
+  tool: string | null;
   filterKind: string;
   rawChars: number;
   filteredChars: number;
@@ -136,6 +139,7 @@ export function resetFilterTelemetryStore(): void {
 /** Record a filter result in the telemetry store. */
 export function recordFilterTelemetry(opts: {
   command: string;
+  tool?: string;
   filterKind: string;
   rawChars: number;
   filteredChars: number;
@@ -149,6 +153,7 @@ export function recordFilterTelemetry(opts: {
 
   getFilterTelemetryStore().record({
     command: opts.command,
+    tool: opts.tool ?? null,
     filterKind: opts.filterKind,
     rawChars: opts.rawChars,
     filteredChars: opts.filteredChars,

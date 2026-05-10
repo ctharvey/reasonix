@@ -75,6 +75,12 @@ export interface FilterLineConfig {
   jsonMaxArrayItems: number;
   jsonMaxDepth: number;
   jsonMaxValueLength: number;
+  /** read_file compressor: collapse import blocks. Default: true (1=on, 0=off). */
+  readImportCollapse: number;
+  /** read_file compressor: max consecutive blank lines. Default: 1. */
+  readBlankLineMax: number;
+  /** read_file compressor: comment block threshold before collapsing. Default: 10. */
+  readCommentThreshold: number;
 }
 
 const DEFAULT_FILTER_LINES: FilterLineConfig = {
@@ -108,6 +114,9 @@ const DEFAULT_FILTER_LINES: FilterLineConfig = {
   jsonMaxArrayItems: 5,
   jsonMaxDepth: 3,
   jsonMaxValueLength: 80,
+  readImportCollapse: 1,
+  readBlankLineMax: 1,
+  readCommentThreshold: 10,
 };
 
 /** Multiplier applied to head/tail limits when the command includes verbose flags. */
@@ -155,6 +164,10 @@ export function boostForVerbose(lc: FilterLineConfig): FilterLineConfig {
     jsonMaxArrayItems: Math.min(lc.jsonMaxArrayItems * VERBOSE_MULTIPLIER, MAX_ENTRIES),
     jsonMaxDepth: lc.jsonMaxDepth,
     jsonMaxValueLength: lc.jsonMaxValueLength,
+    // read_file compressor knobs — pass through unchanged (not head/tail limits).
+    readImportCollapse: lc.readImportCollapse,
+    readBlankLineMax: lc.readBlankLineMax,
+    readCommentThreshold: lc.readCommentThreshold,
   };
 }
 
@@ -278,6 +291,21 @@ export function readFilterLineConfig(): FilterLineConfig {
       "REASONIX_FILTER_JSON_MAX_VALUE_LEN",
       DEFAULT_FILTER_LINES.jsonMaxValueLength,
       MAX_VALUE_LENGTH,
+    ),
+    readImportCollapse: envInt(
+      "REASONIX_FILTER_READ_IMPORTS_COLLAPSE",
+      DEFAULT_FILTER_LINES.readImportCollapse,
+      1,
+    ),
+    readBlankLineMax: envInt(
+      "REASONIX_FILTER_READ_BLANK_LINE_MAX",
+      DEFAULT_FILTER_LINES.readBlankLineMax,
+      10,
+    ),
+    readCommentThreshold: envInt(
+      "REASONIX_FILTER_READ_COMMENT_THRESHOLD",
+      DEFAULT_FILTER_LINES.readCommentThreshold,
+      50,
     ),
   };
 }

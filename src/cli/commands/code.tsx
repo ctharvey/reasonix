@@ -27,6 +27,7 @@ import { t } from "../../i18n/index.js";
 import { detectForeignAgentPlatform } from "../../memory/project.js";
 import { sanitizeName } from "../../memory/session.js";
 import { markPhase } from "../startup-profile.js";
+import { filterToolResult } from "../../tools/output-filter/index.js";
 import { chatCommand } from "./chat.js";
 
 export interface CodeOptions {
@@ -83,13 +84,15 @@ export async function codeCommand(opts: CodeOptions = {}): Promise<void> {
   // truncating most project names.
   const session = opts.noSession ? undefined : `code-${sanitizeName(basename(rootDir))}`;
 
-  markPhase("semantic_bootstrap_start");
-  const { tools, jobs, registerRooted, reBootstrapSemantic, semantic } = await buildCodeToolset({
-    rootDir,
-  });
-  markPhase(
-    semantic.enabled ? "semantic_bootstrap_done_enabled" : "semantic_bootstrap_done_skipped",
-  );
+	markPhase("semantic_bootstrap_start");
+	const { tools, jobs, registerRooted, reBootstrapSemantic, semantic } = await buildCodeToolset({
+		rootDir,
+	});
+	markPhase(
+		semantic.enabled ? "semantic_bootstrap_done_enabled" : "semantic_bootstrap_done_skipped",
+	);
+	// Dispatch-level result filter — compresses non-shell tool outputs before model context.
+	tools.setResultFilter(filterToolResult);
 
   process.stderr.write(
     `${t("startup.codeRooted", {
