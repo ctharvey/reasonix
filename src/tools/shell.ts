@@ -137,31 +137,31 @@ export function registerShellTools(registry: ToolRegistry, opts: ShellToolsOptio
         }
         // "run_once" — fall through and execute
       }
-	// Raw mode bypasses normalization — the caller wants the exact
-	// command they typed, not a rewritten version with injected format
-	// flags.
-	const nr = normalizeCommand(cmd, { raw: args.outputMode === "raw" });
-	const result = await runCommand(nr.executedCommand, {
-		cwd: rootDir,
-		timeoutSec: effectiveTimeout,
-		maxOutputChars,
-		signal: ctx?.signal,
-	});
-	const formatted = formatCommandResult(
-		cmd,
-		result,
-		nr.normalized ? nr.executedCommand : undefined,
-	);
-	// "raw" mode bypasses all filtering — return verbatim output.
-	if (args.outputMode === "raw") {
-		return formatted;
-	}
-	return filterShellOutput(formatted, {
-		tool: "run_command",
-		command: cmd,
-		exitCode: result.exitCode,
-		timedOut: result.timedOut,
-	});
+      // Raw mode bypasses normalization — the caller wants the exact
+      // command they typed, not a rewritten version with injected format
+      // flags.
+      const nr = normalizeCommand(cmd, { raw: args.outputMode === "raw" });
+      const result = await runCommand(nr.executedCommand, {
+        cwd: rootDir,
+        timeoutSec: effectiveTimeout,
+        maxOutputChars,
+        signal: ctx?.signal,
+      });
+      const formatted = formatCommandResult(
+        cmd,
+        result,
+        nr.normalized ? nr.executedCommand : undefined,
+      );
+      // "raw" mode bypasses all filtering — return verbatim output.
+      if (args.outputMode === "raw") {
+        return formatted;
+      }
+      return filterShellOutput(formatted, {
+        tool: "run_command",
+        command: cmd,
+        exitCode: result.exitCode,
+        timedOut: result.timedOut,
+      });
     },
   });
 

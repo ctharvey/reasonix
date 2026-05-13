@@ -8,9 +8,9 @@ import {
 } from "@/telemetry/stats.js";
 import { countTokens } from "@/tokenizer.js";
 import { VERSION } from "@/version.js";
-import { writeClipboard } from "../../clipboard.js";
 import { isFilterEnabled } from "../../../../tools/shell/output-filter/filter-config.js";
 import { getFilterTelemetryStore } from "../../../../tools/shell/output-filter/telemetry.js";
+import { writeClipboard } from "../../clipboard.js";
 import { computeCtxBreakdown } from "../../ctx-breakdown.js";
 import { buildFeedbackDiagnostic, buildFeedbackIssueUrl } from "../../feedback.js";
 import { openUrl } from "../../open-url.js";
