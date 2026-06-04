@@ -163,8 +163,10 @@ export function StatusRow({
         )}
         {status.filterSavingsPct > 0 && (
           <>
-            <Sep />
-            <Text color={TONE.brand}>{`filter ${status.filterSavingsPct}%`}</Text>
+            <Gap />
+            <Pill>
+              <Text color={TONE.brand}>{`filter ${status.filterSavingsPct}%`}</Text>
+            </Pill>
           </>
         )}
       </Box>
