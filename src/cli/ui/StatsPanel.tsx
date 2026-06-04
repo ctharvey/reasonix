@@ -195,12 +195,12 @@ function ChromeRow({
       {showFilter && filterSavings ? (
         <>
           <Text> </Text>
-          <Text dimColor>{"["}</Text>
-          <Text dimColor>{"f "}</Text>
+          <Text dim>{"["}</Text>
+          <Text dim>{"f "}</Text>
           <Bar ratio={filterPct / 100} color={filterColor} cells={6} />
           <Text> </Text>
           <Text color={filterColor}>{`${filterPct}%`}</Text>
-          <Text dimColor>{"]"}</Text>
+          <Text dim>{"]"}</Text>
         </>
       ) : null}
     </Box>
