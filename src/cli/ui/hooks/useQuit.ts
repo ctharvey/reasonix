@@ -2,18 +2,9 @@ import type { WriteStream } from "node:fs";
 import { type MutableRefObject, useCallback, useEffect, useRef } from "react";
 import { stopAndSaveCpuProfile } from "../../cpu-prof.js";
 
-/** Ctrl+C / SIGINT → flush transcript + (if profiling) save .cpuprofile, then `process.exit(0)`.
- *
- * We call `process.exit` directly rather than Ink's `exit()` because
- * the singleton stdin reader keeps a `data` listener attached —
- * `exit()` would unmount the React tree but leave the event loop
- * alive and the terminal would hang.
- *
- * A `process.on("exit")` listener is also registered as a last-resort
- * fallback so `onBeforeExit` runs on SIGTERM, SIGHUP, natural exit,
- * and any other `process.exit()` call that bypasses SIGINT. This
- * listener only does synchronous work (telemetry summary + store
- * clear), so it is safe inside the exit event. */
+// Ctrl+C / SIGINT → flush transcript + (if profiling) save .cpuprofile, then exit.
+// Uses process.exit() directly — Ink's exit() leaves the stdin listener alive.
+// A process.on("exit") fallback fires onBeforeExit on SIGTERM/SIGHUP/natural exit.
 export function useQuit(
   transcriptRef: MutableRefObject<WriteStream | null>,
   onBeforeExit?: () => void,

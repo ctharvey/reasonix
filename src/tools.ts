@@ -336,12 +336,14 @@ export class ToolRegistry {
       if (opts.maxResultChars !== undefined) {
         clipped = truncateForModel(clipped, opts.maxResultChars);
       }
-      // If truncated and the tool allows saving, persist the full result
-      // and re-truncate with the save-path note embedded in the marker.
-      if (clipped !== str && !shouldSkipSave(name, tool?.skipTruncationSave)) {
+      // If truncated (beyond filtering) and the tool allows saving, persist
+      // the full result and re-truncate with the save-path note embedded.
+      // Compare against `filtered` (not raw `str`) so filter-only reduction
+      // doesn't incorrectly trigger the save path.
+      if (clipped !== filtered && !shouldSkipSave(name, tool?.skipTruncationSave)) {
         const relPath = saveTruncatedResult(str, name, opts.rootDir ?? process.cwd());
         const note = `Full result saved at: ${relPath}`;
-        let annotated = str;
+        let annotated = filtered;
         if (opts.maxResultTokens !== undefined) {
           annotated = truncateForModelByTokens(annotated, opts.maxResultTokens, note);
         }

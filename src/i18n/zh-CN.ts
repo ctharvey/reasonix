@@ -438,6 +438,10 @@ export const zhCN: TranslationSchema = {
         "切换网络搜索后端 — bing（默认，国内裸 IP 直连）、bing-intl（国际版索引）、searxng（自托管）、metaso（每日 100 次）、baidu（百度 AI Search，官方文档写有每月 1500 次免费额度）、tavily（每月 1000 次免费）、perplexity（AI 直接回答）、exa（AI 直接回答）、brave（独立索引）或 ollama（Ollama 云端搜索）",
       argsHint: "<bing|bing-intl|searxng|metaso|baidu|tavily|perplexity|exa|brave|ollama> [<key>]",
     },
+    filter: {
+      description: "输出过滤节省报告 — top = 按命令明细 · on/off = 切换过滤",
+      argsHint: "[top|on|off|raw <id>]",
+    },
   },
   wizard: {
     languageTitle: "选择语言",

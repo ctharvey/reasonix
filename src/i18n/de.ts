@@ -432,6 +432,11 @@ export const de: TranslationSchema = {
       description: "Terminal-Theme anzeigen oder speichern. Ohne Argument öffnet die Auswahl.",
     },
     exit: { ...EN.slash.exit, description: "TUI beenden" },
+    filter: {
+      description:
+        "Ausgabefilter-Bericht — top = Aufschlüsselung nach Befehl · on/off = Filter umschalten",
+      argsHint: "[top|on|off|raw <id>]",
+    },
   },
   wizard: {
     ...EN.wizard,

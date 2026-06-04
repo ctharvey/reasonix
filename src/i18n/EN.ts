@@ -458,6 +458,11 @@ export const EN: TranslationSchema = {
         "switch web search backend — bing (default, works from CN without proxy), bing-intl (international index), searxng (self-hosted), metaso (free 100/d), baidu (Baidu AI Search, free 1500/mo per docs), tavily (free 1000/mo), perplexity (AI-native), exa (AI-native), brave (independent index), or ollama (Ollama cloud web search)",
       argsHint: "<bing|bing-intl|searxng|metaso|baidu|tavily|perplexity|exa|brave|ollama> [<key>]",
     },
+    filter: {
+      description:
+        "output filter savings report — top = per-command breakdown · on/off = toggle filtering",
+      argsHint: "[top|on|off|raw <id>]",
+    },
   },
   wizard: {
     languageTitle: "Choose your language",
